@@ -1,0 +1,177 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  lists         List[]
+  items         Item[]
+  sharedLists   SharedList[] @relation("ListRecipient")
+  sharedListsSent SharedList[] @relation("ListSender")
+  
+  // Item Sharing
+  sharedItems   SharedItem[] @relation("ItemRecipient")
+  sharedItemsSent SharedItem[] @relation("ItemSender")
+  
+  // Invites
+  createdTokens ShareToken[]
+  
+  // Item Ranks
+  itemRanks     ItemRank[]
+}
+
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  // Smart List: Defined by tags
+  filterTags ListFilterTag[] 
+  shares    SharedList[]
+}
+
+model Item {
+  id        String   @id @default(cuid())
+  content   String
+  isChecked Boolean  @default(false)
+  
+  // Enriched fields
+  title     String?
+  imageUrl  String?
+  link      String?
+  location  String?
+
+  createdAt DateTime @default(now())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tags      ItemTag[]
+  shares    SharedItem[]
+  ranks     ItemRank[]
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  color       String   @default("blue")
+  items       ItemTag[]
+  smartLists  ListFilterTag[]
+}
+
+model ItemTag {
+  itemId String
+  tagId  String
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, tagId])
+}
+
+model ListFilterTag {
+  listId String
+  tagId  String
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([listId, tagId])
+}
+
+model SharedList {
+  id        String @id @default(cuid())
+  userId    String
+  listId    String
+  sharedById String? // Optional for now
+  
+  user      User   @relation("ListRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  sharedBy  User?  @relation("ListSender", fields: [sharedById], references: [id])
+  list      List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listId])
+}
+
+model ItemRank {
+  id        String   @id @default(cuid())
+  userId    String
+  contextId String   // "dashboard" OR list.id
+  itemId    String
+  rank      String   // Lexicographical rank
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contextId, itemId])
+  @@index([userId, contextId, rank])
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model ShareToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  type      String   // "ITEM" or "LIST"
+  entityId  String
+  creatorId String
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  creator   User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+}
+
+model SharedItem {
+  id         String @id @default(cuid())
+  userId     String // Recipient
+  itemId     String
+  sharedById String // Sender
+
+  user       User   @relation("ItemRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  sharedBy   User   @relation("ItemSender", fields: [sharedById], references: [id], onDelete: Cascade)
+  item       Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+}

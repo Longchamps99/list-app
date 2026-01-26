@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Item" ADD COLUMN "imageUrl" TEXT;
+ALTER TABLE "Item" ADD COLUMN "link" TEXT;
+ALTER TABLE "Item" ADD COLUMN "location" TEXT;
+ALTER TABLE "Item" ADD COLUMN "title" TEXT;
