@@ -490,6 +490,7 @@ export default function LandingPage() {
                     <p>© 2026 Vaulted. Curate your legacy.</p>
                     <div className="flex gap-6">
                         <Link href="/privacy" className="underline hover:text-indigo-400 transition-colors">Privacy Policy</Link>
+                        <Link href="/terms" className="underline hover:text-indigo-400 transition-colors">Terms of Service</Link>
                     </div>
                 </div>
             </footer>
