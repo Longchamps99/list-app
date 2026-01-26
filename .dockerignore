@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env*
+*.db
+*.db-journal
+Dockerfile
+.dockerignore
+cloudbuild.yaml
+.claude
+brain
