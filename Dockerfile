@@ -29,6 +29,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+# Copy prisma directory for startup migrations
+COPY --from=builder /app/prisma ./prisma
 
 USER nextjs
 
@@ -37,5 +39,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Note: The server.js is created by Next.js in standalone mode
-CMD ["node", "server.js"]
+# Run Prisma initialization on startup
+CMD npx prisma db push --accept-data-loss && node server.js
