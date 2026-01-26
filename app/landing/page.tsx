@@ -486,8 +486,11 @@ export default function LandingPage() {
 
             {/* Footer */}
             <footer className="relative z-10 border-t border-white/10 py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto text-center text-gray-400 text-sm">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-400 text-sm">
                     <p>© 2026 Vaulted. Curate your legacy.</p>
+                    <div className="flex gap-6">
+                        <Link href="/privacy" className="underline hover:text-indigo-400 transition-colors">Privacy Policy</Link>
+                    </div>
                 </div>
             </footer>
         </div>
