@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET() {
     const user = await getCurrentUser();
@@ -9,8 +10,8 @@ export async function GET() {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     const lists = await prisma.list.findMany({
         where: {
@@ -47,8 +48,8 @@ export async function POST(req: Request) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     try {
         const { title, tags } = await req.json(); // tags: string[]
@@ -78,6 +79,18 @@ export async function POST(req: Request) {
                 });
             }
         }
+
+        // Capture list created event
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: userId,
+            event: 'list_created',
+            properties: {
+                list_id: list.id,
+                title: title,
+                tag_count: tags?.length || 0,
+            }
+        });
 
         return NextResponse.json(list);
     } catch (error) {

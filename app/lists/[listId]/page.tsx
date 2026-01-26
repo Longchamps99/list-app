@@ -312,9 +312,9 @@ export default function ListPage() {
                 } else if (sort === "alpha") {
                     return (a.title || "").localeCompare(b.title || "");
                 } else {
-                    // Rank sort (lexicographical)
-                    const rankA = a.ranks?.[0]?.rank || "";
-                    const rankB = b.ranks?.[0]?.rank || "";
+                    // Rank sort (lexicographical) - Use middle fallback to allow items to be moved above/below unranked items
+                    const rankA = a.ranks?.[0]?.rank || "0|h00000:";
+                    const rankB = b.ranks?.[0]?.rank || "0|h00000:";
                     return rankA.localeCompare(rankB);
                 }
             })

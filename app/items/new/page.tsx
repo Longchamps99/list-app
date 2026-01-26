@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Header } from "../../components/Header";
+import posthog from "posthog-js";
 
 export default function NewItemPage() {
     const router = useRouter();
@@ -76,6 +76,16 @@ export default function NewItemPage() {
                     if (data.tags && Array.isArray(data.tags)) {
                         setTags(data.tags);
                     }
+                    // Capture auto-enrich event
+                    posthog.capture('new_item_auto_enriched', {
+                        query: queryOrTitle,
+                        entity_id: entityId,
+                        has_description: !!data.description,
+                        has_image: !!data.imageUrl,
+                        has_link: !!data.link,
+                        has_location: !!data.location,
+                        tag_count: data.tags?.length || 0,
+                    });
                 } else {
                     alert("No info found.");
                 }

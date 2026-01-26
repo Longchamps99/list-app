@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   description: "A simple, collaborative list management application allowing you to create lists, tag items, and share with others.",
 };
 
+import { Suspense } from "react";
+import PostHogPageView from "./components/PostHogPageView";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -36,6 +39,9 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <Suspense fallback={null}>
+            <PostHogPageView />
+          </Suspense>
           {children}
         </Providers>
       </body>

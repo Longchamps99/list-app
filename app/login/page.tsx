@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import posthog from "posthog-js";
 
 function LoginForm() {
     const [email, setEmail] = useState("");
@@ -24,14 +25,33 @@ function LoginForm() {
         });
 
         if (result?.ok) {
+            // Identify user in PostHog
+            posthog.identify(email, {
+                email: email,
+            });
+
+            // Capture login event
+            posthog.capture('user_logged_in', {
+                method: 'credentials',
+            });
+
             router.push(callbackUrl);
         } else {
+            // Capture failed login attempt
+            posthog.capture('login_failed', {
+                method: 'credentials',
+                email: email,
+            });
+
             alert("Login failed");
             setIsLoading(false);
         }
     };
 
     const handleGoogleSignIn = () => {
+        posthog.capture('login_started', {
+            method: 'google',
+        });
         signIn("google", { callbackUrl });
     };
 

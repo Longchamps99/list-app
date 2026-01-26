@@ -8,8 +8,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ listId:
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     // 1. Get the list to understand its Filter Tags (Context)
     const list = await prisma.list.findUnique({

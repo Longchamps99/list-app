@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(req: Request) {
     const user = await getCurrentUser();
     console.log('[Items API] User from session:', JSON.stringify(user, null, 2));
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
     console.log('[Items API] Using hardcoded userId:', userId);
 
     const { searchParams } = new URL(req.url);
@@ -76,9 +77,9 @@ export async function GET(req: Request) {
         if (!searchParams.get("sort")) {
             items.sort((a, b) => {
                 // @ts-ignore
-                const rankA = a.ranks?.[0]?.rank || "0|zzzzzz:"; // Default to end
+                const rankA = a.ranks?.[0]?.rank || "0|h00000:";
                 // @ts-ignore
-                const rankB = b.ranks?.[0]?.rank || "0|zzzzzz:";
+                const rankB = b.ranks?.[0]?.rank || "0|h00000:";
                 return rankA.localeCompare(rankB);
             });
         }
@@ -106,8 +107,8 @@ export async function POST(req: Request) {
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     try {
         const { content, title, imageUrl, link, location, customTags } = await req.json();
@@ -149,6 +150,21 @@ export async function POST(req: Request) {
                 update: {}
             });
         }
+
+        // Capture item created event
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: userId,
+            event: 'item_created',
+            properties: {
+                item_id: item.id,
+                title: title,
+                has_image: !!imageUrl,
+                has_link: !!link,
+                has_location: !!location,
+                tag_count: tagNames.length,
+            }
+        });
 
         return NextResponse.json(item);
     } catch (error) {

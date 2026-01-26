@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
     const { itemId } = await params;
@@ -8,8 +9,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ itemId: 
 
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     const item = await prisma.item.findUnique({
         where: { id: itemId },
@@ -39,8 +40,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     // Verify ownership
     const item = await prisma.item.findUnique({
@@ -56,6 +57,18 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
     }
 
     await prisma.item.delete({ where: { id: itemId } });
+
+    // Capture item deleted event
+    const posthog = getPostHogClient();
+    posthog.capture({
+        distinctId: userId,
+        event: 'item_deleted',
+        properties: {
+            item_id: itemId,
+            title: item.title,
+        }
+    });
+
     return new NextResponse(null, { status: 204 });
 }
 
@@ -64,8 +77,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ itemId
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     const { isChecked, content, title, imageUrl, link, location } = await req.json();
 

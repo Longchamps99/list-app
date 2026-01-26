@@ -10,6 +10,9 @@ import { DndContext, closestCenter, DragEndEvent, DragStartEvent, TouchSensor, M
 import { arrayMove, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../components/SortableItem";
 import { LexoRank } from "lexorank";
+import posthog from "posthog-js";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 
 // ... interfaces Item, Tag, ListSummary (keep them)
 interface Tag {
@@ -52,6 +55,7 @@ export default function Dashboard() {
     const [sort, setSort] = useState<string>("date");
     const [listSort, setListSort] = useState<"alpha" | "newest">("newest");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -65,6 +69,13 @@ export default function Dashboard() {
     useEffect(() => {
         const handler = setTimeout(() => {
             fetchItems();
+            // Capture search event when search term is non-empty
+            if (search.trim()) {
+                posthog.capture('item_search_performed', {
+                    search_term: search,
+                    sort_by: sort,
+                });
+            }
         }, 300);
         return () => clearTimeout(handler);
     }, [search, sort]);
@@ -169,15 +180,76 @@ export default function Dashboard() {
                 })
             });
 
+            // Capture item reordered event
+            posthog.capture('item_reordered', {
+                item_id: active.id,
+                old_index: oldIndex,
+                new_index: newIndex,
+                new_rank: newRankStr,
+            });
+
             return newItems;
         });
     };
 
     const openSmartList = (tagName: string) => {
+        // Capture tag clicked event
+        posthog.capture('tag_clicked', {
+            tag_name: tagName,
+        });
         router.push(`/smart-lists?tags=${encodeURIComponent(tagName)}`);
     };
 
     const isDraggable = !sort || sort === "rank";
+
+    const SidebarContent = (
+        <div className="p-6">
+            <div className="flex items-center justify-between mb-4">
+                <h2 className="font-bold text-white uppercase tracking-wider text-xs opacity-50">My Smart Lists</h2>
+                <button
+                    onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
+                    className="p-1 text-gray-400 hover:text-indigo-400 rounded transition-colors"
+                    title={listSort === "alpha" ? "Sort by Newest" : "Sort A-Z"}
+                >
+                    {listSort === "alpha" ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path alpha-sort="true" d="M10 2a1 1 0 011 1v13.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 16.586V3a1 1 0 011-1z" />
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        </svg>
+                    )}
+                </button>
+            </div>
+
+            <ul className="space-y-1">
+                {[...lists]
+                    .sort((a, b) => {
+                        if (listSort === "alpha") {
+                            return a.title.localeCompare(b.title);
+                        } else {
+                            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                        }
+                    })
+                    .map(list => (
+                        <li key={list.id}>
+                            <Link
+                                href={`/lists/${list.id}`}
+                                className="block px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 hover:text-indigo-400 transition truncate border border-transparent hover:border-white/10"
+                                onClick={() => setIsMobileSidebarOpen(false)}
+                            >
+                                {list.title}
+                            </Link>
+                        </li>
+                    ))}
+                {lists.length === 0 && (
+                    <p className="text-gray-500 text-sm px-3 py-2 italic">Save a tag search to create your first Smart List</p>
+                )}
+            </ul>
+        </div>
+    );
 
     if (loading && items.length === 0) {
         return <div className="p-8 text-center text-gray-500">Loading your world...</div>;
@@ -185,7 +257,7 @@ export default function Dashboard() {
 
     return (
         <>
-            <Header variant="dashboard" />
+            <Header variant="dashboard" onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col md:flex-row relative overflow-hidden">
                 {/* Background Effects */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -193,49 +265,44 @@ export default function Dashboard() {
                     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
                 </div>
 
-                {/* Sidebar */}
-                <aside className="w-full md:w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/10 min-h-screen flex-shrink-0 relative z-10">
-                    <div className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-bold text-white">My Top 10</h2>
-                            <button
-                                onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
-                                className="p-1 text-gray-400 hover:text-indigo-400 rounded transition-colors"
-                                title={listSort === "alpha" ? "Sort by Newest" : "Sort A-Z"}
-                            >
-                                {listSort === "alpha" ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
-                                    </svg>
-                                ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path alpha-sort="true" d="M10 2a1 1 0 011 1v13.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 16.586V3a1 1 0 011-1z" />
-                                        {/* Simplified icon for "Newest" / Time sort */}
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-
-                        <ul className="space-y-1">
-                            {[...lists]
-                                .sort((a, b) => {
-                                    if (listSort === "alpha") {
-                                        return a.title.localeCompare(b.title);
-                                    } else {
-                                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                                    }
-                                })
-                                .map(list => (
-                                    <li key={list.id}>
-                                        <Link href={`/lists/${list.id}`} className="block px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 hover:text-indigo-400 transition truncate border border-transparent hover:border-white/10">
-                                            {list.title}
-                                        </Link>
-                                    </li>
-                                ))}
-                        </ul>
-                    </div>
+                {/* Desktop Sidebar (Sidebar is always visible on desktop) */}
+                <aside className="hidden md:block w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/10 min-h-screen flex-shrink-0 relative z-10">
+                    {SidebarContent}
                 </aside>
+
+                {/* Mobile Sidebar Trigger/Drawer */}
+                <AnimatePresence>
+                    {isMobileSidebarOpen && (
+                        <>
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setIsMobileSidebarOpen(false)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[101] md:hidden"
+                            />
+                            {/* Drawer */}
+                            <motion.aside
+                                initial={{ x: "-100%" }}
+                                animate={{ x: 0 }}
+                                exit={{ x: "-100%" }}
+                                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                className="fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-white/10 z-[102] md:hidden overflow-y-auto"
+                            >
+                                <div className="flex justify-end p-4">
+                                    <button
+                                        onClick={() => setIsMobileSidebarOpen(false)}
+                                        className="p-2 text-gray-400 hover:text-white transition-colors"
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                {SidebarContent}
+                            </motion.aside>
+                        </>
+                    )}
+                </AnimatePresence>
 
                 {/* Main Content */}
                 <main className="flex-1 p-8 min-w-0 relative z-10">
@@ -282,7 +349,10 @@ export default function Dashboard() {
                                 {/* View Toggle */}
                                 <div className="flex items-center gap-1 border-r border-white/10 pr-3">
                                     <button
-                                        onClick={() => setViewMode("grid")}
+                                        onClick={() => {
+                                            setViewMode("grid");
+                                            posthog.capture('view_mode_changed', { view_mode: 'grid' });
+                                        }}
                                         className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
                                         title="Grid view"
                                     >
@@ -291,7 +361,10 @@ export default function Dashboard() {
                                         </svg>
                                     </button>
                                     <button
-                                        onClick={() => setViewMode("list")}
+                                        onClick={() => {
+                                            setViewMode("list");
+                                            posthog.capture('view_mode_changed', { view_mode: 'list' });
+                                        }}
                                         className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
                                         title="List view"
                                     >

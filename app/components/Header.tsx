@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Menu } from "lucide-react";
 
 interface HeaderProps {
     variant?: "dashboard" | "page";
     title?: string;
     showBack?: boolean;
     backHref?: string;
+    onMenuClick?: () => void;
     children?: React.ReactNode;
 }
 
@@ -19,6 +20,7 @@ export function Header({
     title,
     showBack = false,
     backHref = "/dashboard",
+    onMenuClick,
     children
 }: HeaderProps) {
     const { data: session } = useSession();
@@ -30,10 +32,19 @@ export function Header({
     };
 
     return (
-        <header className="bg-slate-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-10 w-full shadow-lg shadow-black/20">
+        <header className="bg-slate-950/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-[100] w-full shadow-lg shadow-black/20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                 {/* Left Section */}
                 <div className="flex items-center gap-4">
+                    {variant === "dashboard" && onMenuClick && (
+                        <button
+                            onClick={onMenuClick}
+                            className="p-2 text-gray-400 hover:text-white transition-colors md:hidden"
+                            aria-label="Toggle Menu"
+                        >
+                            <Menu className="h-6 w-6" />
+                        </button>
+                    )}
                     {showBack && (
                         <Link
                             href={backHref}

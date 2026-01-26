@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 interface Props {
     params: Promise<{ token: string }>;
@@ -92,6 +93,19 @@ export default async function SharePage({ params }: Props) {
                         userId,
                         itemId: newItem.id, // Point to COPY
                         sharedById: senderId
+                    }
+                });
+
+                // Capture share link redeemed event
+                const posthog = getPostHogClient();
+                posthog.capture({
+                    distinctId: userId,
+                    event: 'share_link_redeemed',
+                    properties: {
+                        type: 'ITEM',
+                        original_item_id: shareToken.entityId,
+                        new_item_id: newItem.id,
+                        shared_by: senderId,
                     }
                 });
 
@@ -193,6 +207,20 @@ export default async function SharePage({ params }: Props) {
                         userId,
                         listId: newList.id,
                         sharedById: senderId
+                    }
+                });
+
+                // Capture share link redeemed event
+                const posthog = getPostHogClient();
+                posthog.capture({
+                    distinctId: userId,
+                    event: 'share_link_redeemed',
+                    properties: {
+                        type: 'LIST',
+                        original_list_id: shareToken.entityId,
+                        new_list_id: newList.id,
+                        shared_by: senderId,
+                        items_cloned: itemsToClone.length,
                     }
                 });
 

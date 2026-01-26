@@ -97,8 +97,11 @@ const TYPEWRITER_WORDS = [
     "Anything"
 ];
 
+import { usePostHog } from "posthog-js/react";
+
 export default function LandingPage() {
     const router = useRouter();
+    const posthog = usePostHog();
     // We store objects with IDs to help DnD tracking
     const [movies, setMovies] = useState<{ id: string; value: string }[]>(
         Array(10).fill(null).map((_, i) => ({ id: `item-${i}`, value: "" }))
@@ -232,6 +235,11 @@ export default function LandingPage() {
     };
 
     const handleSaveAndRegister = () => {
+        // Track conversion event
+        posthog.capture("landing_page_conversion_clicked", {
+            movie_count: movies.filter(m => m.value.trim() !== "").length
+        });
+
         const simpleList = movies.map(m => m.value);
         localStorage.setItem("tempTop10", JSON.stringify(simpleList));
         router.push("/register");

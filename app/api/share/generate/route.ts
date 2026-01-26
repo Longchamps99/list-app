@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -80,6 +81,18 @@ export async function POST(req: NextRequest) {
 
         const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
         const url = `${baseUrl}/share/${token}`;
+
+        // Capture share link generated event
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: userId,
+            event: 'share_link_generated',
+            properties: {
+                type: type,
+                entity_id: id,
+                token: token,
+            }
+        });
 
         return NextResponse.json({ url });
 

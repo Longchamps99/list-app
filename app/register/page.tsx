@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Star } from "lucide-react";
+import posthog from "posthog-js";
 
 function RegisterForm() {
     const [email, setEmail] = useState("");
@@ -40,6 +41,10 @@ function RegisterForm() {
     };
 
     const handleGoogleSignIn = () => {
+        posthog.capture('signup_started', {
+            method: 'google',
+            has_saved_list: savedMovies.length > 0,
+        });
         signIn("google", { callbackUrl });
     };
 

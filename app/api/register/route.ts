@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function POST(req: Request) {
     try {
@@ -28,8 +29,39 @@ export async function POST(req: Request) {
             },
         });
 
+        // Capture server-side signup event
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: email,
+            event: 'user_signed_up',
+            properties: {
+                email: email,
+                name: name,
+                source: 'api',
+            }
+        });
+
+        // Identify user on server side
+        posthog.identify({
+            distinctId: email,
+            properties: {
+                email: email,
+                name: name,
+                createdAt: new Date().toISOString(),
+            }
+        });
+
         return NextResponse.json(user);
     } catch (error) {
+        // Capture registration error
+        const posthog = getPostHogClient();
+        posthog.capture({
+            distinctId: 'anonymous',
+            event: 'registration_error',
+            properties: {
+                error: error instanceof Error ? error.message : 'Unknown error',
+            }
+        });
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

@@ -6,8 +6,8 @@ export async function GET(req: Request) {
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     const { searchParams } = new URL(req.url);
     const tagsParam = searchParams.get("tags");

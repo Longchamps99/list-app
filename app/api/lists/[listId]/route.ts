@@ -7,8 +7,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ listId: 
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     // 1. Fetch List Definition (Context & Shares)
     const list = await prisma.list.findUnique({
@@ -91,9 +91,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ listId: 
     // Sort by Rank
     items.sort((a, b) => {
         // @ts-ignore
-        const rankA = a.ranks?.[0]?.rank || "0|zzzzzz:";
+        const rankA = a.ranks?.[0]?.rank || "0|h00000:";
         // @ts-ignore
-        const rankB = b.ranks?.[0]?.rank || "0|zzzzzz:";
+        const rankB = b.ranks?.[0]?.rank || "0|h00000:";
         return rankA.localeCompare(rankB);
     });
 
@@ -105,8 +105,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ listI
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     try {
         await prisma.list.delete({
@@ -127,8 +127,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ listId
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
-    // TEMPORARY: Hardcode user ID for testing
-    const userId = 'cmkkbjmdg0007epqjcz6qwkn2'; // Phil.reed@gmail.com
+    // @ts-ignore
+    const userId = user.id;
 
     try {
         const { title } = await req.json();
