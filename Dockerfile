@@ -1,6 +1,6 @@
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:20-slim AS deps
+RUN apt-get update && apt-get install -y openssl ca-certificates
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
@@ -10,7 +10,7 @@ ARG CACHEBUST=1
 RUN npm ci
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -20,15 +20,15 @@ RUN ./node_modules/.bin/prisma generate
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
-RUN apk add --no-cache openssl libc6-compat
+RUN apt-get update && apt-get install -y openssl ca-certificates
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy essential files for standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
