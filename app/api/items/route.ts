@@ -4,18 +4,17 @@ import { getCurrentUser } from "@/lib/session";
 import { getPostHogClient } from "@/lib/posthog-server";
 
 export async function GET(req: Request) {
-    const user = await getCurrentUser();
-    console.log('[Items API] User from session:', JSON.stringify(user, null, 2));
-
-    // @ts-ignore
-    const userId = user.id;
-    console.log('[Items API] Using hardcoded userId:', userId);
-
-    const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search") || "";
-    const sort = searchParams.get("sort") || "date"; // 'date' | 'alpha'
-
     try {
+        const user = await getCurrentUser();
+        if (!user) return new NextResponse("Unauthorized", { status: 401 });
+
+        // @ts-ignore
+        const userId = user.id;
+
+        const { searchParams } = new URL(req.url);
+        const search = searchParams.get("search") || "";
+        const sort = searchParams.get("sort") || "date"; // 'date' | 'alpha'
+
         const where: any = {
             AND: [
                 {

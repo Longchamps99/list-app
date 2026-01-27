@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { generateTags } from "@/lib/ai";
 
-export async function POST(req: Request, { params }: { params: Promise<{ listId: string }> }) {
-    const { listId } = await params;
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -13,7 +13,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ listId:
 
     // 1. Get the list to understand its Filter Tags (Context)
     const list = await prisma.list.findUnique({
-        where: { id: listId },
+        where: { id: id },
         include: {
             filterTags: { include: { tag: true } },
             // @ts-ignore

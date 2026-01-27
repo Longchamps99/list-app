@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
-export async function POST(req: Request, { params }: { params: Promise<{ listId: string }> }) {
-    const { listId } = await params;
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -30,12 +30,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ listId:
             where: {
                 userId_listId: {
                     userId: targetUser.id,
-                    listId: listId
+                    listId: id
                 }
             },
             create: {
                 userId: targetUser.id,
-                listId: listId
+                listId: id
             },
             update: {}
         });

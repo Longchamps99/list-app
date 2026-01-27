@@ -24,7 +24,7 @@ interface Item {
 
 export default function ItemDetailPage() {
     const params = useParams();
-    const itemId = params?.itemId as string;
+    const id = params?.id as string;
     const router = useRouter();
 
     const [item, setItem] = useState<Item | null>(null);
@@ -42,8 +42,8 @@ export default function ItemDetailPage() {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
-        if (itemId) fetchItem();
-    }, [itemId]);
+        if (id) fetchItem();
+    }, [id]);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -55,7 +55,7 @@ export default function ItemDetailPage() {
 
     const fetchItem = async () => {
         try {
-            const res = await fetch(`/api/items/${itemId}`);
+            const res = await fetch(`/api/items/${id}`);
             if (!res.ok) {
                 if (res.status === 404) router.push("/dashboard");
                 return;
@@ -80,7 +80,7 @@ export default function ItemDetailPage() {
         if (!item) return;
 
         try {
-            const res = await fetch(`/api/items/${itemId}`, {
+            const res = await fetch(`/api/items/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -110,7 +110,7 @@ export default function ItemDetailPage() {
 
     const handleDelete = async () => {
         try {
-            const res = await fetch(`/api/items/${itemId}`, {
+            const res = await fetch(`/api/items/${id}`, {
                 method: "DELETE"
             });
 
@@ -129,7 +129,7 @@ export default function ItemDetailPage() {
         if (!newTagName.trim() || !item) return;
 
         try {
-            const res = await fetch(`/api/items/${itemId}/tags`, {
+            const res = await fetch(`/api/items/${id}/tags`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ tagName: newTagName.trim() })
@@ -146,7 +146,7 @@ export default function ItemDetailPage() {
 
     const removeTag = async (tagId: string) => {
         try {
-            const res = await fetch(`/api/items/${itemId}/tags/${tagId}`, {
+            const res = await fetch(`/api/items/${id}/tags/${tagId}`, {
                 method: "DELETE"
             });
 

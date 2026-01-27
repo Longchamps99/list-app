@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -13,8 +13,8 @@ import { LexoRank } from "lexorank";
 import posthog from "posthog-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { ToastContainer, ToastMessage } from "../components/Toast";
 
-// ... interfaces Item, Tag, ListSummary (keep them)
 interface Tag {
     id: string;
     name: string;
@@ -57,6 +57,10 @@ export default function Dashboard() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+    // Toast State
+    const [toasts, setToasts] = useState<ToastMessage[]>([]);
+    const pendingDeletes = useRef<Map<string, { timeout: NodeJS.Timeout, item: Item, index: number }>>(new Map());
+
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -69,7 +73,6 @@ export default function Dashboard() {
     useEffect(() => {
         const handler = setTimeout(() => {
             fetchItems();
-            // Capture search event when search term is non-empty
             if (search.trim()) {
                 posthog.capture('item_search_performed', {
                     search_term: search,
@@ -99,14 +102,10 @@ export default function Dashboard() {
             if (search) params.set("search", search);
             if (sort && sort !== "rank") params.set("sort", sort);
 
-            console.log('[Dashboard] Fetching items with params:', params.toString());
             const res = await fetch(`/api/items?${params.toString()}`);
-            console.log('[Dashboard] Response status:', res.status, res.statusText);
 
             if (res.ok) {
                 const data = await res.json();
-                console.log('[Dashboard] Received items:', data.length, 'items');
-                console.log('[Dashboard] First item:', data[0]);
                 setItems(data);
             } else {
                 console.error('[Dashboard] Failed to fetch items:', res.status, await res.text());
@@ -115,6 +114,62 @@ export default function Dashboard() {
             console.error('[Dashboard] Error fetching items:', e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const showToast = (message: string, action?: { label: string, onClick: () => void }, duration = 4000) => {
+        const id = Math.random().toString(36).substring(7);
+        setToasts(prev => [...prev, { id, message, action, duration }]);
+        setTimeout(() => removeToast(id), duration);
+    };
+
+    const removeToast = (id: string) => {
+        setToasts(prev => prev.filter(t => t.id !== id));
+    };
+
+    const handleDelete = async (itemId: string) => {
+        const itemIndex = items.findIndex(i => i.id === itemId);
+        const itemToDelete = items[itemIndex];
+        if (!itemToDelete) return;
+
+        // Optimistic UI update
+        setItems(prev => prev.filter(i => i.id !== itemId));
+
+        // Set timeout for actual API call
+        const timeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/items/${itemId}`, { method: "DELETE" });
+                if (!res.ok) console.error("Failed to delete item server-side");
+                pendingDeletes.current.delete(itemId);
+            } catch (err) {
+                console.error(err);
+            }
+        }, 3500); // 3.5s delay to allow undo
+
+        // Store pending delete info
+        pendingDeletes.current.set(itemId, { timeout, item: itemToDelete, index: itemIndex });
+
+        // Show Undo Toast
+        showToast("Item deleted", {
+            label: "Undo",
+            onClick: () => handleUndo(itemId)
+        });
+    };
+
+    const handleUndo = (itemId: string) => {
+        const pending = pendingDeletes.current.get(itemId);
+        if (pending) {
+            clearTimeout(pending.timeout);
+
+            // Restore item to correct position
+            setItems(prev => {
+                const newItems = [...prev];
+                newItems.splice(pending.index, 0, pending.item);
+                return newItems;
+            });
+
+            pendingDeletes.current.delete(itemId);
+            // Ideally we dismiss the toast here, but simple timeout cleanup is strictly enough for functionality
         }
     };
 
@@ -134,7 +189,6 @@ export default function Dashboard() {
 
             const newItems = arrayMove(items, oldIndex, newIndex);
 
-            // Calculate Rank
             const prevItem = newItems[newIndex - 1];
             const nextItem = newItems[newIndex + 1];
 
@@ -143,9 +197,7 @@ export default function Dashboard() {
 
             let newRankStr;
             try {
-                // Check for collision or invalid sort order
                 if (prevRankStr === nextRankStr) {
-                    console.warn("Rank collision detected. Generating next rank.");
                     const prev = LexoRank.parse(prevRankStr);
                     newRankStr = prev.genNext().toString();
                 } else {
@@ -155,22 +207,16 @@ export default function Dashboard() {
                 }
             } catch (e) {
                 console.error("Rank calc error", e);
-                // Fallback: If calculation fails, try generating next from previous
-                // If even that fails, use a timestamp-based fallback to ensure uniqueness (though order might vary)
                 try {
                     const prev = LexoRank.parse(prevRankStr);
                     newRankStr = prev.genNext().toString();
                 } catch (fallbackErr) {
-                    // Last resort: random position in middle bucket to break stuck state
-                    // This is just to allow the drop to succeed
                     newRankStr = LexoRank.middle().toString();
                 }
             }
 
-            // Update item locally
             newItems[newIndex].ranks[0] = { rank: newRankStr };
 
-            // API Update
             fetch("/api/ranks", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -180,7 +226,6 @@ export default function Dashboard() {
                 })
             });
 
-            // Capture item reordered event
             posthog.capture('item_reordered', {
                 item_id: active.id,
                 old_index: oldIndex,
@@ -193,7 +238,6 @@ export default function Dashboard() {
     };
 
     const openSmartList = (tagName: string) => {
-        // Capture tag clicked event
         posthog.capture('tag_clicked', {
             tag_name: tagName,
         });
@@ -257,24 +301,21 @@ export default function Dashboard() {
 
     return (
         <>
+            <ToastContainer toasts={toasts} onDismiss={removeToast} />
             <Header variant="dashboard" onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col md:flex-row relative overflow-hidden">
-                {/* Background Effects */}
                 <div className="fixed inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
                     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
                 </div>
 
-                {/* Desktop Sidebar (Sidebar is always visible on desktop) */}
                 <aside className="hidden md:block w-64 bg-slate-900/50 backdrop-blur-xl border-r border-white/10 min-h-screen flex-shrink-0 relative z-10">
                     {SidebarContent}
                 </aside>
 
-                {/* Mobile Sidebar Trigger/Drawer */}
                 <AnimatePresence>
                     {isMobileSidebarOpen && (
                         <>
-                            {/* Backdrop */}
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -282,7 +323,6 @@ export default function Dashboard() {
                                 onClick={() => setIsMobileSidebarOpen(false)}
                                 className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[101] md:hidden"
                             />
-                            {/* Drawer */}
                             <motion.aside
                                 initial={{ x: "-100%" }}
                                 animate={{ x: 0 }}
@@ -304,11 +344,8 @@ export default function Dashboard() {
                     )}
                 </AnimatePresence>
 
-                {/* Main Content */}
                 <main className="flex-1 p-8 min-w-0 relative z-10">
-                    {/* Controls Bar */}
                     <div className="mb-6 flex items-center justify-between">
-                        {/* Search Bar */}
                         <div className="flex-1 max-w-2xl relative">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -331,9 +368,7 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* View and Sort Controls */}
                         <div className="flex items-center gap-3">
-                            {/* Add New Item Button */}
                             <Link
                                 href="/items/new"
                                 className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 !text-white rounded-lg hover:from-green-500 hover:to-emerald-500 hover:-translate-y-0.5 transition-all font-bold text-sm shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
@@ -341,12 +376,22 @@ export default function Dashboard() {
                                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="text-white hidden sm:inline">Add New Item</span>
+                                <span className="text-white hidden sm:inline">New Item</span>
                             </Link>
 
-                            {/* View and Sort Controls - Grouped */}
+                            <Link
+                                href="/items/paste"
+                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg transition-all font-bold text-sm border border-indigo-500/30 hover:border-indigo-500/50 shadow-sm"
+                                title="Smart Paste"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                                </svg>
+                                <span className="hidden lg:inline">Smart Paste</span>
+                            </Link>
+
                             <div className="flex items-center gap-3 border border-white/10 rounded-lg p-1 bg-slate-800/50 backdrop-blur-sm">
-                                {/* View Toggle */}
                                 <div className="flex items-center gap-1 border-r border-white/10 pr-3">
                                     <button
                                         onClick={() => {
@@ -374,7 +419,6 @@ export default function Dashboard() {
                                     </button>
                                 </div>
 
-                                {/* Sort Dropdown */}
                                 <div className="flex items-center gap-2 text-sm">
                                     <span className="text-gray-400 font-medium">Sort:</span>
                                     <select
@@ -400,20 +444,17 @@ export default function Dashboard() {
                     >
                         <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy} disabled={!isDraggable}>
                             {viewMode === "grid" ? (
-                                /* Grid View - Tiles */
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {items.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragHandleProps) => (
                                                 <div className="bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 p-4 flex items-center gap-6 group hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all border border-white/10 hover:border-indigo-500/30 relative h-full">
-                                                    {/* Left Control (Grip) */}
                                                     {isDraggable && (
                                                         <div className="text-indigo-400 hover:text-indigo-300 cursor-grab active:cursor-grabbing flex-shrink-0 pr-2 border-r border-white/10 h-full flex items-center" {...dragHandleProps}>
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
                                                         </div>
                                                     )}
 
-                                                    {/* Media (Image) */}
                                                     <Link href={`/items/${item.id}`} className="flex-shrink-0">
                                                         {item.imageUrl ? (
                                                             <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 relative">
@@ -426,9 +467,7 @@ export default function Dashboard() {
                                                         )}
                                                     </Link>
 
-                                                    {/* Content Body */}
                                                     <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
-                                                        {/* Row 1: Header (Rank & Title) */}
                                                         <div className="flex items-center gap-3">
                                                             {isDraggable && (
                                                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30 leading-none">
@@ -442,10 +481,8 @@ export default function Dashboard() {
                                                             </Link>
                                                         </div>
 
-                                                        {/* Row 2: Description */}
                                                         <p className="text-gray-400 text-sm line-clamp-1">{item.content}</p>
 
-                                                        {/* Row 3: Tags */}
                                                         {item.tags.length > 0 && (
                                                             <div className="flex flex-wrap gap-2 mt-1">
                                                                 {item.tags.slice(0, 4).map(({ tag }) => (
@@ -466,7 +503,6 @@ export default function Dashboard() {
                                                             </div>
                                                         )}
 
-                                                        {/* Row 4: Actions & Metadata (Footer) */}
                                                         <div className="flex items-center gap-4 mt-2">
                                                             <ShareButton
                                                                 type="ITEM"
@@ -476,16 +512,9 @@ export default function Dashboard() {
                                                             />
 
                                                             <button
-                                                                onClick={async (e) => {
+                                                                onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    if (confirm("Delete this item?")) {
-                                                                        try {
-                                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-                                                                            if (res.ok) fetchItems();
-                                                                        } catch (err) {
-                                                                            console.error(err);
-                                                                        }
-                                                                    }
+                                                                    handleDelete(item.id);
                                                                 }}
                                                                 className="p-1.5 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
                                                                 title="Delete item"
@@ -513,22 +542,18 @@ export default function Dashboard() {
                                     ))}
                                 </div>
                             ) : (
-                                /* List View - Compact Rows */
                                 <div className="space-y-2">
                                     {items.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragHandleProps) => (
                                                 <div className="bg-slate-900/50 backdrop-blur-xl rounded-lg shadow-sm border border-white/10 p-3 flex flex-col gap-2 group hover:border-indigo-500/30 transition-all relative">
-                                                    {/* Top Row: Rank, Title, Actions */}
                                                     <div className="flex items-center gap-3">
-                                                        {/* Rank (if draggable/sorted by rank) */}
                                                         {isDraggable && (
                                                             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-indigo-500/30 leading-none">
                                                                 #{index + 1}
                                                             </div>
                                                         )}
 
-                                                        {/* Drag Handle (if draggable) */}
                                                         {isDraggable && (
                                                             <div className="cursor-grab text-indigo-400 hover:text-indigo-300 px-1 border-r border-white/10 pr-2 flex-shrink-0" {...dragHandleProps}>
                                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -537,14 +562,12 @@ export default function Dashboard() {
                                                             </div>
                                                         )}
 
-                                                        {/* Title */}
                                                         <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
                                                             <h3 className="font-bold text-white hover:text-indigo-400 transition truncate text-sm">
                                                                 {item.title || "Untitled"}
                                                             </h3>
                                                         </Link>
 
-                                                        {/* Actions & Metadata */}
                                                         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                                                             <span className="text-xs text-gray-500 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
 
@@ -564,16 +587,9 @@ export default function Dashboard() {
                                                             />
 
                                                             <button
-                                                                onClick={async (e) => {
+                                                                onClick={(e) => {
                                                                     e.preventDefault();
-                                                                    if (confirm("Delete this item?")) {
-                                                                        try {
-                                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-                                                                            if (res.ok) fetchItems();
-                                                                        } catch (err) {
-                                                                            console.error(err);
-                                                                        }
-                                                                    }
+                                                                    handleDelete(item.id);
                                                                 }}
                                                                 className="p-1 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
                                                                 title="Delete item"
@@ -585,7 +601,6 @@ export default function Dashboard() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Bottom Row: Tags (if any) */}
                                                     {item.tags.length > 0 && (
                                                         <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[calc(1.5rem+12px)]"> {/* Indent to align with title if desired, or keep left */}
                                                             {item.tags.slice(0, 4).map(({ tag }) => (
@@ -621,4 +636,3 @@ export default function Dashboard() {
         </>
     );
 }
-

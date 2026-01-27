@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { getPostHogClient } from "@/lib/posthog-server";
 
-export async function GET(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
-    const { itemId } = await params;
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
 
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
@@ -13,7 +13,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ itemId: 
     const userId = user.id;
 
     const item = await prisma.item.findUnique({
-        where: { id: itemId },
+        where: { id: id },
         include: {
             tags: { include: { tag: true } },
             // @ts-ignore
@@ -35,8 +35,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ itemId: 
     return NextResponse.json(item);
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
-    const { itemId } = await params;
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -45,7 +45,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
 
     // Verify ownership
     const item = await prisma.item.findUnique({
-        where: { id: itemId }
+        where: { id: id }
     });
 
     if (!item) return new NextResponse("Not Found", { status: 404 });
@@ -56,7 +56,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
         return new NextResponse("Forbidden", { status: 403 });
     }
 
-    await prisma.item.delete({ where: { id: itemId } });
+    await prisma.item.delete({ where: { id: id } });
 
     // Capture item deleted event
     const posthog = getPostHogClient();
@@ -64,7 +64,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
         distinctId: userId,
         event: 'item_deleted',
         properties: {
-            item_id: itemId,
+            item_id: id,
             title: item.title,
         }
     });
@@ -72,8 +72,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
     return new NextResponse(null, { status: 204 });
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
-    const { itemId } = await params;
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -84,7 +84,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ itemId
 
     // Verify ownership or shared access
     const existingItem = await prisma.item.findUnique({
-        where: { id: itemId },
+        where: { id: id },
         // @ts-ignore
         // @ts-ignore
         include: { shares: { where: { userId: userId } } }
@@ -104,7 +104,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ itemId
 
     try {
         const item = await prisma.item.update({
-            where: { id: itemId },
+            where: { id: id },
             data: {
                 ...(isChecked !== undefined && { isChecked }),
                 ...(content !== undefined && { content }),

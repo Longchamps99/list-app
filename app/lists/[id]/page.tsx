@@ -90,7 +90,7 @@ interface List {
 
 export default function ListPage() {
     const params = useParams();
-    const listId = params?.listId as string;
+    const id = params?.id as string;
 
     const [list, setList] = useState<List | null>(null);
     const [loading, setLoading] = useState(true);
@@ -106,12 +106,12 @@ export default function ListPage() {
     );
 
     useEffect(() => {
-        if (listId) fetchList();
-    }, [listId]);
+        if (id) fetchList();
+    }, [id]);
 
     const fetchList = async () => {
         try {
-            const res = await fetch(`/api/lists/${listId}`);
+            const res = await fetch(`/api/lists/${id}`);
             if (!res.ok) {
                 if (res.status === 404) router.push("/dashboard");
                 return;
@@ -183,7 +183,7 @@ export default function ListPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contextId: listId,
+                contextId: id,
                 updates: [{ itemId: active.id, rank: newRankStr }]
             })
         });
@@ -243,7 +243,7 @@ export default function ListPage() {
         if (!email) return;
 
         try {
-            const res = await fetch(`/api/lists/${listId}/share`, {
+            const res = await fetch(`/api/lists/${id}/share`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email })
@@ -270,7 +270,7 @@ export default function ListPage() {
         if (!editTitle.trim()) return;
 
         try {
-            const res = await fetch(`/api/lists/${listId}`, {
+            const res = await fetch(`/api/lists/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title: editTitle })
@@ -287,7 +287,7 @@ export default function ListPage() {
     const deleteList = async () => {
         if (!confirm("Are you sure you want to delete this list?")) return;
         try {
-            const res = await fetch(`/api/lists/${listId}`, { method: "DELETE" });
+            const res = await fetch(`/api/lists/${id}`, { method: "DELETE" });
             if (res.ok) router.push("/dashboard");
         } catch (e) {
             console.error(e);

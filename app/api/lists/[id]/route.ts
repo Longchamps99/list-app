@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
-export async function GET(req: Request, { params }: { params: Promise<{ listId: string }> }) {
-    const { listId } = await params;
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -12,7 +12,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ listId: 
 
     // 1. Fetch List Definition (Context & Shares)
     const list = await prisma.list.findUnique({
-        where: { id: listId },
+        where: { id: id },
         include: {
             filterTags: { include: { tag: true } },
             shares: {
@@ -82,7 +82,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ listId: 
                     // @ts-ignore
                     // @ts-ignore
                     userId: userId,
-                    contextId: listId
+                    contextId: id
                 }
             }
         }
@@ -100,8 +100,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ listId: 
     return NextResponse.json({ ...list, items });
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ listId: string }> }) {
-    const { listId } = await params;
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -111,7 +111,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ listI
     try {
         await prisma.list.delete({
             where: {
-                id: listId,
+                id: id,
                 // @ts-ignore
                 ownerId: userId
             }
@@ -122,8 +122,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ listI
     }
 }
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ listId: string }> }) {
-    const { listId } = await params;
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -134,7 +134,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ listId
         const { title } = await req.json();
         const list = await prisma.list.update({
             where: {
-                id: listId,
+                id: id,
                 // @ts-ignore
                 ownerId: userId
             },
