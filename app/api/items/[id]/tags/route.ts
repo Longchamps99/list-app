@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 
-export async function POST(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
-    const { itemId } = await params;
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -23,12 +23,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ itemId:
         await prisma.itemTag.upsert({
             where: {
                 itemId_tagId: {
-                    itemId: itemId,
+                    itemId: id,
                     tagId: tag.id
                 }
             },
             create: {
-                itemId: itemId,
+                itemId: id,
                 tagId: tag.id
             },
             update: {}
@@ -40,8 +40,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ itemId:
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ itemId: string }> }) {
-    const { itemId } = await params;
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
@@ -54,7 +54,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ itemI
         await prisma.itemTag.delete({
             where: {
                 itemId_tagId: {
-                    itemId: itemId,
+                    itemId: id,
                     tagId: tagId
                 }
             }
