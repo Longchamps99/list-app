@@ -1,6 +1,9 @@
+# Use a common base to ensure openssl is available everywhere
+FROM node:20-slim AS base
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+
 # Stage 1: Dependencies
-FROM node:20-slim AS deps
-RUN apt-get update && apt-get install -y openssl ca-certificates
+FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
@@ -10,20 +13,18 @@ ARG CACHEBUST=1
 RUN npm ci
 
 # Stage 2: Builder
-FROM node:20-slim AS builder
+FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Generate Prisma Client using local binary to avoid npx downloading latest
+# Generate Prisma Client using local binary. Base image has openssl, so detection works.
 RUN ./node_modules/.bin/prisma generate
 # Build the application
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:20-slim AS runner
+FROM base AS runner
 WORKDIR /app
-
-RUN apt-get update && apt-get install -y openssl ca-certificates
 
 ENV NODE_ENV=production
 
