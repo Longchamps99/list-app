@@ -1,5 +1,5 @@
 # Use a common base to ensure openssl is available everywhere
-FROM node:20-slim AS base
+FROM node:20-bullseye-slim AS base
 RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Stage 1: Dependencies
@@ -39,6 +39,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy prisma directory for startup migrations
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+
+# Grant write permissions to the /app directory for SQLite
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
