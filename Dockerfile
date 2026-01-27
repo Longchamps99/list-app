@@ -44,4 +44,5 @@ ENV PORT=8080
 ENV HOSTNAME="0.0.0.0"
 
 # Run Prisma initialization on startup
-CMD npx prisma db push --accept-data-loss && node server.js
+# Run app directly (skipping prisma push for isolation)
+CMD ["node", "server.js"]
