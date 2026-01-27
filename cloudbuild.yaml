@@ -1,3 +1,7 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
@@ -21,9 +25,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-
-options:
-  logging: CLOUD_LOGGING_ONLY
 
 images:
   - 'gcr.io/$PROJECT_ID/list-app'
