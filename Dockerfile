@@ -4,6 +4,9 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
+
+# Add a cache-busting argument to force npm ci to run if needed
+ARG CACHEBUST=1
 RUN npm ci
 
 # Stage 2: Builder
@@ -11,8 +14,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client using local binary to avoid npx downloading latest
+RUN ./node_modules/.bin/prisma generate
 # Build the application
 RUN npm run build
 
