@@ -29,6 +29,8 @@ RUN adduser --system --uid 1001 nextjs
 
 # Copy essential files for standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+# Copy necessary node_modules (including Prisma CLI)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy prisma directory for startup migrations
