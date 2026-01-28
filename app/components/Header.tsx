@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
-import { Star, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 
 interface HeaderProps {
     variant?: "dashboard" | "page";
@@ -58,7 +58,11 @@ export function Header({
                     )}
 
                     <Link href="/dashboard" className="flex items-center gap-2 group">
-                        <Star className="h-6 w-6 text-indigo-400 group-hover:text-indigo-300 transition-colors fill-indigo-400/20" />
+                        <img
+                            src="https://lh3.googleusercontent.com/P68YSdtz6nrkq0jDrxhsyWrFc4awbJnZUArw4n8A0SjPrmk_1mL033AuAynVSIOVUtf_"
+                            alt="Vaulted Logo"
+                            className="h-8 w-8 object-contain rounded-md"
+                        />
                         <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-purple-300 transition-all">
                             Vaulted
                         </h1>
