@@ -9,6 +9,9 @@ import posthog from "posthog-js";
 
 function RegisterForm() {
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isRegistered, setIsRegistered] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [savedMovies, setSavedMovies] = useState<string[]>([]);
     const router = useRouter();
@@ -31,13 +34,32 @@ function RegisterForm() {
         }
     }, []);
 
-    const handleEmailSubmit = async (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setMessage(null);
 
-        // For now, redirect to login with email pre-filled
-        // In a real app, you'd send a magic link or create account
-        router.push(`/login?email=${encodeURIComponent(email)}&callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setIsRegistered(true);
+                setMessage({ type: 'success', text: data.message });
+                posthog.capture('user_registered', { method: 'credentials' });
+            } else {
+                setMessage({ type: 'error', text: data.message || "Registration failed" });
+            }
+        } catch (error) {
+            setMessage({ type: 'error', text: "Internal server error" });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoogleSignIn = () => {
@@ -49,6 +71,38 @@ function RegisterForm() {
     };
 
     const loginLink = `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+
+    if (isRegistered) {
+        return (
+            <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 relative overflow-hidden">
+                <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div className="w-full max-w-md relative z-10 text-center">
+                    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8">
+                        <div className="mb-6 flex justify-center">
+                            <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center">
+                                <Star className="h-8 w-8 text-indigo-400" />
+                            </div>
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-4">Check your email</h1>
+                        <p className="text-gray-400 mb-8">
+                            We've sent a verification link to <span className="text-white font-semibold">{email}</span>.
+                            Please click the link to verify your account.
+                        </p>
+                        <Link
+                            href="/login"
+                            className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 rounded-lg text-sm font-bold text-white shadow-lg inline-block w-full hover:from-indigo-50 hover:to-purple-500 transition-all"
+                        >
+                            Return to Login
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 relative overflow-hidden">
@@ -102,11 +156,16 @@ function RegisterForm() {
                         </div>
                     )}
 
-                    {/* Email Form */}
-                    <form onSubmit={handleEmailSubmit} className="mb-6">
-                        <div className="mb-4">
+                    {/* Registration Form */}
+                    <form onSubmit={handleRegister} className="mb-6 space-y-4">
+                        {message && (
+                            <div className={`p-3 rounded-lg text-sm font-medium ${message.type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/50' : 'bg-red-500/20 text-red-400 border border-red-500/50'}`}>
+                                {message.text}
+                            </div>
+                        )}
+                        <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1.5">
-                                Enter your email
+                                Email
                             </label>
                             <input
                                 id="email"
@@ -120,12 +179,28 @@ function RegisterForm() {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1.5">
+                                Create Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                minLength={6}
+                                placeholder="••••••••"
+                                className="block w-full rounded-lg bg-slate-800/50 border border-white/10 px-4 py-3 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all hover:bg-slate-800/80"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </div>
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:from-indigo-500 hover:to-purple-500 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                            className="w-full rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:from-indigo-50 hover:to-purple-500 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                            {isLoading ? "Loading..." : "Continue"}
+                            {isLoading ? "Creating Account..." : "Create Account"}
                         </button>
                     </form>
 

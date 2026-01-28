@@ -41,9 +41,14 @@ function LoginForm() {
             posthog.capture('login_failed', {
                 method: 'credentials',
                 email: email,
+                error: result?.error
             });
 
-            alert("Login failed");
+            if (result?.error === "unverified") {
+                alert("Please verify your email address before logging in. Check your inbox for a verification link.");
+            } else {
+                alert("Login failed. Please check your credentials.");
+            }
             setIsLoading(false);
         }
     };

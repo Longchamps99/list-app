@@ -54,6 +54,10 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
+                if (!user.emailVerified) {
+                    throw new Error("unverified");
+                }
+
                 return user;
             },
         }),
