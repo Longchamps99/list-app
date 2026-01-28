@@ -258,7 +258,11 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <Star className="h-8 w-8 text-indigo-400 fill-indigo-400/20" />
+                            <img
+                                src="https://lh3.googleusercontent.com/P68YSdtz6nrkq0jDrxhsyWrFc4awbJnZUArw4n8A0SjPrmk_1mL033AuAynVSIOVUtf_"
+                                alt="Vaulted Logo"
+                                className="h-8 w-8 object-contain rounded-md"
+                            />
                             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                                 Vaulted
                             </span>
