@@ -31,3 +31,6 @@ These rules are critical for the successful deployment of the `list-app` to Goog
 ## 4. Next.js Configuration
 - **Output Mode**: `output: "standalone"` must be enabled in `next.config.ts`.
 - **Startup**: Start the application using `node server.js` from the standalone output.
+## 5. Infrastructure Details
+- **Cloud SQL Instance**: `gen-lang-client-0994401151:us-east4:vaulted-faves`
+- **Container Image URL**: `europe-west1-docker.pkg.dev/gen-lang-client-0994401151/cloud-run-source-deploy/list-app/list-app`
