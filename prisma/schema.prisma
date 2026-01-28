@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -97,7 +97,7 @@ model SharedList {
   sharedById String? // Optional for now
   
   user      User   @relation("ListRecipient", fields: [userId], references: [id], onDelete: Cascade)
-  sharedBy  User?  @relation("ListSender", fields: [sharedById], references: [id])
+  sharedBy  User?  @relation("ListSender", fields: [sharedById], references: [id], onDelete: SetNull)
   list      List   @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@unique([userId, listId])
