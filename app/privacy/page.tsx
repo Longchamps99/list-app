@@ -104,12 +104,29 @@ export default function PrivacyPage() {
                                     </div>
                                 </div>
                             </section>
+                            <section>
+                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                    <Shield className="h-6 w-6" />
+                                    <h2 className="text-2xl font-bold text-white">Compliance & Global Rights</h2>
+                                </div>
+                                <div className="space-y-4 text-gray-300 leading-relaxed text-sm">
+                                    <p>
+                                        <strong>GDPR (General Data Protection Regulation):</strong> For users in the EU/EEA, Vaulted acts as a Data Controller. You have the right to data portability, the right to be forgotten, and the right to object to processing.
+                                    </p>
+                                    <p>
+                                        <strong>CCPA (California Consumer Privacy Act):</strong> We do not sell your personal information. California residents have the right to request disclosure of data collection and the right to delete their data.
+                                    </p>
+                                    <p>
+                                        <strong>Data Retention:</strong> We retain your data as long as your account is active. If you delete your account, data is scrubbed immediately. Inactive accounts with no login for 24 months may be subject to deletion after email notification.
+                                    </p>
+                                </div>
+                            </section>
                         </div>
 
                         <div className="mt-20 pt-8 border-t border-white/10 text-center">
                             <p className="text-gray-500 mb-4">Questions about your privacy?</p>
-                            <a href="mailto:privacy@vaulted.app" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
-                                privacy@vaulted.app
+                            <a href="mailto:privacy@vaultedfaves.com" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
+                                privacy@vaultedfaves.com
                             </a>
                         </div>
                     </motion.div>
