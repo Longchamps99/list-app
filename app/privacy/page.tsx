@@ -27,7 +27,7 @@ export default function PrivacyPage() {
                             Privacy Policy
                         </h1>
                         <p className="text-gray-400 mb-12 text-lg">
-                            Last updated: January 26, 2026. Your privacy is at the core of Vaulted. We built this app to help you curate your legacy, not to exploit your data.
+                            Last updated: January 28, 2026. Your privacy is at the core of Vaulted. We built this app to help you curate your legacy, not to exploit your data.
                         </p>
 
                         <div className="space-y-12">
@@ -52,8 +52,8 @@ export default function PrivacyPage() {
                                         When you use Vaulted, we collect information necessary to provide the service:
                                     </p>
                                     <ul className="list-disc pl-6 space-y-2">
-                                        <li><strong>Account Information:</strong> Your name, email address, and profile picture (if provided via Google/Facebook OAuth).</li>
-                                        <li><strong>User Content:</strong> The titles, descriptions, and tags of the items you add to your lists.</li>
+                                        <li><strong>Account Information:</strong> Your name, email address, and profile picture (if provided via Google OAuth).</li>
+                                        <li><strong>User Content:</strong> The titles, descriptions, and ranks of the items you add to your lists.</li>
                                         <li><strong>Usage Data:</strong> Basic interaction data (via PostHog) to help us understand which features are most useful and to improve the app.</li>
                                     </ul>
                                 </div>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
                                     <h2 className="text-2xl font-bold text-white">How Your Data is Secured</h2>
                                 </div>
                                 <p className="text-gray-300 leading-relaxed">
-                                    Your data is stored securely using industry-standard encryption on Google Cloud Platform. We use secure OAuth 2.0 protocols for authentication, meaning we never see or store your social media passwords.
+                                    Your data is stored securely using industry-standard encryption on Google Cloud Platform. We use secure OAuth 2.0 protocols for authentication, meaning we never see or store your Google password.
                                 </p>
                             </section>
 
@@ -82,11 +82,27 @@ export default function PrivacyPage() {
                             <section>
                                 <div className="flex items-center gap-3 mb-4 text-indigo-400">
                                     <Trash2 className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">Your Rights</h2>
+                                    <h2 className="text-2xl font-bold text-white">Your Rights & Data Deletion</h2>
                                 </div>
-                                <p className="text-gray-300 leading-relaxed">
-                                    You have full control over your data. You can delete items, lists, or your entire account at any time. When you delete your account, we remove your personal information from our active databases.
-                                </p>
+                                <div className="space-y-4 text-gray-300 leading-relaxed">
+                                    <p>
+                                        You have full control over your data. In accordance with GDPR and CCPA guidelines, you have the right to access, correct, or delete your personal information.
+                                    </p>
+                                    <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                                        <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                                            Permanent Account Deletion
+                                        </h3>
+                                        <p className="text-sm mb-3">
+                                            You can permanently delete your account at any time through your <strong>Settings</strong> page.
+                                        </p>
+                                        <ul className="list-disc pl-5 text-sm space-y-1 text-gray-400">
+                                            <li>Deletion is permanent and cannot be undone.</li>
+                                            <li>All your lists, items, and shares will be immediately scrubbed from our active databases.</li>
+                                            <li>All authentication tokens and session data will be invalidated and removed.</li>
+                                            <li>Associated third-party metadata (like your Google profile link) will be disconnected and deleted.</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </section>
                         </div>
 
