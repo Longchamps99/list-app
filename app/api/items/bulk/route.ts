@@ -84,7 +84,18 @@ export async function POST(req: NextRequest) {
 
     } catch (error: any) {
         console.error("[Bulk API] Error:", error);
+        console.error("[Bulk API] Error name:", error?.name);
+        console.error("[Bulk API] Error code:", error?.code);
+        console.error("[Bulk API] Error message:", error?.message);
+        console.error("[Bulk API] Error meta:", error?.meta);
         console.error("[Bulk API] Stack:", error?.stack);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+        // Return more detailed error for debugging
+        return NextResponse.json({
+            error: "Internal Server Error",
+            details: error?.message,
+            code: error?.code,
+            meta: error?.meta
+        }, { status: 500 });
     }
 }
