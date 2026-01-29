@@ -14,17 +14,22 @@ export async function POST(req: Request) {
 
         // Support both single tagName (legacy) and tagNames array
         let tagsToProcess: string[] = [];
-        if (tagNames && Array.isArray(tagNames)) {
-            tagsToProcess = tagNames;
+        if (tagNames && Array.isArray(tagNames) && tagNames.length > 0) {
+            // Deduplicate and normalize tagNames directly
+            tagsToProcess = Array.from(new Set(tagNames.map((t: string) => t.trim().toLowerCase()).filter(Boolean)));
         } else if (tagName) {
-            tagsToProcess = [tagName];
+            // Deduplicate and normalize single tagName
+            const normalizedTagName = tagName.trim().toLowerCase();
+            if (normalizedTagName) {
+                tagsToProcess = [normalizedTagName];
+            }
         }
 
         if (tagsToProcess.length === 0) {
             return new NextResponse("Tag names required", { status: 400 });
         }
 
-        const normalizedTags = tagsToProcess.map(t => t.trim().toLowerCase()).filter(Boolean);
+        const normalizedTags = Array.from(new Set(tagsToProcess.map(t => t.trim().toLowerCase()).filter(Boolean)));
 
         console.log("[Smart List API] Creating list with tags:", normalizedTags);
 
