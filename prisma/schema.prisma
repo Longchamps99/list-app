@@ -25,6 +25,7 @@ model User {
   sharedItems     SharedItem[] @relation("ItemRecipient")
   sharedListsSent SharedList[] @relation("ListSender")
   sharedLists     SharedList[] @relation("ListRecipient")
+  passwordResetTokens PasswordResetToken[]
 }
 
 model List {
@@ -137,6 +138,19 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+  
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([email, token])
 }
 
 model ShareToken {
