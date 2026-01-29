@@ -115,17 +115,15 @@ function SmartListContent() {
 
             if (res.ok) {
                 const { listId } = await res.json();
-                // Redirect to the now persistent list
                 router.push(`/lists/${listId}`);
-                // Force a refresh of the sidebar (optional, might need context or reload)
-                // A simple way is to route and let the new page load
                 router.refresh();
             } else {
-                alert("Failed to save list");
+                const errorData = await res.json().catch(() => ({}));
+                alert(`Failed to save list: ${errorData.message || res.statusText}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error saving list");
+            alert(`Error saving list: ${e.message}`);
         } finally {
             setSaving(false);
         }

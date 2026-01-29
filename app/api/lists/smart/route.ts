@@ -26,27 +26,25 @@ export async function POST(req: Request) {
 
         const normalizedTags = tagsToProcess.map(t => t.trim().toLowerCase()).filter(Boolean);
 
+        console.log("[Smart List API] Creating list with tags:", normalizedTags);
+
         // 1. Find or Create Tags
         const tagObjects: any[] = [];
         for (const name of normalizedTags) {
-            const tag = await prisma.tag.upsert({
-                where: { name },
-                update: {},
-                create: { name }
-            });
-            tagObjects.push(tag);
+            try {
+                const tag = await prisma.tag.upsert({
+                    where: { name },
+                    update: {},
+                    create: { name }
+                });
+                tagObjects.push(tag);
+            } catch (tagError) {
+                console.error(`[Smart List API] Failed to upsert tag "${name}":`, tagError);
+                throw tagError;
+            }
         }
 
         // 2. Check for existing Smart List for this user and EXACT set of tags
-        // This query is tricky in Prisma. We want a list where:
-        // - owner is user
-        // - count of filterTags is exactly the count of our tags
-        // - AND all of our tagIds are present
-
-        // Simplified approach: Create a new list if complex query is too hard, OR just try to find one with the *first* tag and then filter in JS?
-        // Let's try to find potential matches first.
-
-        // Find lists owned by user that have at least one of our tags
         const potentialLists = await prisma.list.findMany({
             where: {
                 // @ts-ignore
@@ -70,11 +68,13 @@ export async function POST(req: Request) {
         });
 
         if (existingList) {
+            console.log("[Smart List API] Found existing list:", existingList.id);
             return NextResponse.json({ listId: existingList.id });
         }
 
         // 3. Create new Smart List
         const title = normalizedTags.map(t => `#${t}`).join(" + ");
+        console.log("[Smart List API] Saving new list:", title);
 
         const newList = await prisma.list.create({
             data: {
@@ -89,10 +89,18 @@ export async function POST(req: Request) {
             }
         });
 
+        console.log("[Smart List API] Successfully created list:", newList.id);
         return NextResponse.json({ listId: newList.id });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Smart list creation error:", error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return new NextResponse(JSON.stringify({
+            error: "Internal Error",
+            message: error.message,
+            code: error.code
+        }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }

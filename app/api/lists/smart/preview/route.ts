@@ -26,7 +26,9 @@ export async function GET(req: Request) {
         // 1. Find the Tag objects for the requested names
         const matchingTags = await prisma.tag.findMany({
             where: {
-                name: { in: tagNames, mode: 'insensitive' }
+                OR: tagNames.map(name => ({
+                    name: { equals: name, mode: 'insensitive' }
+                }))
             }
         });
 

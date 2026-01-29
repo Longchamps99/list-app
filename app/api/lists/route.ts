@@ -71,21 +71,32 @@ export async function POST(req: Request) {
             }
         }
 
-        // Capture list created event
-        const posthog = getPostHogClient();
-        posthog.capture({
-            distinctId: userId,
-            event: 'list_created',
-            properties: {
-                list_id: list.id,
-                title: title,
-                tag_count: tags?.length || 0,
-            }
-        });
+        // Capture list created event (gracefully handle analytics failures)
+        try {
+            const posthog = getPostHogClient();
+            posthog.capture({
+                distinctId: userId,
+                event: 'list_created',
+                properties: {
+                    list_id: list.id,
+                    title: title,
+                    tag_count: tags?.length || 0,
+                }
+            });
+        } catch (analyticsError) {
+            console.error("[Lists API POST] PostHog capture failed:", analyticsError);
+        }
 
         return NextResponse.json(list);
-    } catch (error) {
+    } catch (error: any) {
         console.error('[Lists API POST] Error:', error);
-        return new NextResponse("Internal Error", { status: 500 });
+        return new NextResponse(JSON.stringify({
+            error: "Internal Error",
+            message: error.message,
+            code: error.code
+        }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }
