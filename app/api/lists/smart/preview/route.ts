@@ -26,7 +26,7 @@ export async function GET(req: Request) {
         // 1. Find the Tag objects for the requested names
         const matchingTags = await prisma.tag.findMany({
             where: {
-                name: { in: tagNames }
+                name: { in: tagNames, mode: 'insensitive' }
             }
         });
 
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
                     tags: {
                         some: {
                             tag: {
-                                name: tagName
+                                name: { equals: tagName, mode: 'insensitive' }
                             }
                         }
                     }

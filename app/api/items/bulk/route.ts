@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         items.forEach(item => {
             if (item.tags && Array.isArray(item.tags)) {
                 item.tags.forEach((tag: string) => {
-                    const cleanTag = tag.trim();
+                    const cleanTag = tag.trim().toLowerCase();
                     if (cleanTag) allTagNames.add(cleanTag);
                 });
             }
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
                 // Handle tags - now we just create the relations since tags already exist
                 if (tags && Array.isArray(tags)) {
                     for (const tagName of tags) {
-                        const cleanTag = tagName.trim();
+                        const cleanTag = tagName.trim().toLowerCase();
                         if (!cleanTag) continue;
 
                         const tagId = tagMap.get(cleanTag);

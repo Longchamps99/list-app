@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
         if (tags && Array.isArray(tags) && tags.length > 0) {
             for (const tagName of tags) {
-                const normalizedTagName = tagName.trim();
+                const normalizedTagName = tagName.trim().toLowerCase();
                 const tag = await prisma.tag.upsert({
                     where: { name: normalizedTagName },
                     update: {},
