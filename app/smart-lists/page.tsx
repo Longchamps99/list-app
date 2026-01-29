@@ -82,7 +82,7 @@ function SmartListContent() {
         e.preventDefault();
         if (!newTagInput.trim()) return;
 
-        const currentTags = tagsParam ? tagsParam.split(",") : [];
+        const currentTags = tagsParam ? tagsParam.split(",").map(t => t.toLowerCase()) : [];
         const newTag = newTagInput.trim().toLowerCase();
 
         if (!currentTags.includes(newTag)) {
@@ -93,8 +93,8 @@ function SmartListContent() {
     };
 
     const removeTagFilter = (tagToRemove: string) => {
-        const currentTags = tagsParam ? tagsParam.split(",") : [];
-        const newTags = currentTags.filter(t => t !== tagToRemove);
+        const currentTags = tagsParam ? tagsParam.split(",").map(t => t.toLowerCase()) : [];
+        const newTags = currentTags.filter(t => t !== tagToRemove.toLowerCase());
 
         if (newTags.length === 0) {
             router.push("/dashboard");
@@ -130,9 +130,10 @@ function SmartListContent() {
     };
 
     const openSmartList = (tagName: string) => {
-        const currentTags = tagsParam ? tagsParam.split(",") : [];
-        if (!currentTags.includes(tagName.toLowerCase())) {
-            const newTags = [...currentTags, tagName.toLowerCase()];
+        const currentTags = tagsParam ? tagsParam.split(",").map(t => t.toLowerCase()) : [];
+        const normalizedTagName = tagName.toLowerCase();
+        if (!currentTags.includes(normalizedTagName)) {
+            const newTags = [...currentTags, normalizedTagName];
             router.push(`/smart-lists?tags=${newTags.join(",")}`);
         }
     };

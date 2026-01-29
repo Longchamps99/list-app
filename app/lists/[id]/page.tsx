@@ -336,7 +336,7 @@ export default function ListPage() {
             }
         } else {
             // Regular list: Just open preview for this tag
-            router.push(`/smart-lists?tags=${encodeURIComponent(clickedTagName)}`);
+            router.push(`/smart-lists?tags=${encodeURIComponent(clickedTagName.toLowerCase())}`);
         }
     };
 

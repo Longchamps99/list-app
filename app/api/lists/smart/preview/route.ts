@@ -16,7 +16,7 @@ export async function GET(req: Request) {
         return NextResponse.json({ items: [], matchingTags: [] });
     }
 
-    const tagNames = tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+    const tagNames = Array.from(new Set(tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(Boolean)));
 
     if (tagNames.length === 0) {
         return NextResponse.json({ items: [], matchingTags: [] });

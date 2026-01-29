@@ -241,7 +241,7 @@ export default function Dashboard() {
         posthog.capture('tag_clicked', {
             tag_name: tagName,
         });
-        router.push(`/smart-lists?tags=${encodeURIComponent(tagName)}`);
+        router.push(`/smart-lists?tags=${encodeURIComponent(tagName.toLowerCase())}`);
     };
 
     const isDraggable = !sort || sort === "rank";
