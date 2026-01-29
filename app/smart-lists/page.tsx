@@ -186,7 +186,7 @@ function SmartListContent() {
                 </div>
 
                 {/* Tag Filters Bar */}
-                <div className="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 relative z-10">
+                <div className="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 relative z-30">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2 items-center">
                         <span className="text-sm text-gray-400 mr-2">Filters:</span>
                         {matchingTags.map(tag => (
@@ -222,7 +222,7 @@ function SmartListContent() {
 
                             {/* Autocomplete Dropdown */}
                             {showDropdown && (
-                                <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-md shadow-2xl shadow-black/50 z-20">
+                                <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-md shadow-2xl shadow-black/50 z-50">
                                     {allTags
                                         .filter(tag => {
                                             const currentTags = tagsParam ? tagsParam.split(",") : [];
