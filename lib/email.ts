@@ -1,6 +1,16 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-load Resend client to avoid initialization during build
+let resendClient: Resend | null = null;
+const getResendClient = () => {
+    if (!resendClient) {
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error("RESEND_API_KEY is not configured");
+        }
+        resendClient = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resendClient;
+};
 
 const domain = process.env.NEXTAUTH_URL || "https://vaultedfaves.com";
 
@@ -9,6 +19,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
     console.log(`Sending verification email to ${email} with link: ${confirmLink}`);
 
+    const resend = getResendClient();
     const { data, error } = await resend.emails.send({
         from: "Vaulted <onboarding@vaultedfaves.com>",
         to: email,
@@ -49,6 +60,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
     console.log(`Sending password reset email to ${email} with link: ${resetLink}`);
 
+    const resend = getResendClient();
     const { data, error } = await resend.emails.send({
         from: "Vaulted <onboarding@vaultedfaves.com>",
         to: email,
