@@ -379,17 +379,6 @@ export default function Dashboard() {
                                 <span className="text-white hidden sm:inline">New Item</span>
                             </Link>
 
-                            <Link
-                                href="/items/paste"
-                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 rounded-lg transition-all font-bold text-sm border border-indigo-500/30 hover:border-indigo-500/50 shadow-sm"
-                                title="Smart Paste"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                                </svg>
-                                <span className="hidden lg:inline">Smart Paste</span>
-                            </Link>
 
                             <div className="flex items-center gap-3 border border-white/10 rounded-lg p-1 bg-slate-800/50 backdrop-blur-sm">
                                 <div className="flex items-center gap-1 border-r border-white/10 pr-3">
