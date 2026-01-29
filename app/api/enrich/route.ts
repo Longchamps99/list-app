@@ -2,11 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { enrichItems } from "@/lib/enrichment";
+import { enrichLimiter } from "@/lib/ratelimit";
+
+async function applyRateLimit(req: NextRequest) {
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    const { success } = await enrichLimiter.limit(ip);
+    return success;
+}
 
 export async function GET(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate Limiting
+    if (!await applyRateLimit(req)) {
+        return NextResponse.json({ error: "Too many enrichment requests. Please try again in a minute." }, { status: 429 });
     }
 
     const { searchParams } = new URL(req.url);
@@ -34,6 +46,11 @@ export async function POST(req: NextRequest) {
     if (!session) {
         console.warn("[Enrichment API] Unauthorized access attempt");
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate Limiting
+    if (!await applyRateLimit(req)) {
+        return NextResponse.json({ error: "Too many enrichment requests. Please try again in a minute." }, { status: 429 });
     }
 
     try {

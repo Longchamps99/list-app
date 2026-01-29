@@ -3,12 +3,24 @@ import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
 import crypto from "crypto";
 import { z } from "zod";
+import { emailLimiter } from "@/lib/ratelimit";
 
 const resendSchema = z.object({
     email: z.string().email(),
 });
 
 export async function POST(req: NextRequest) {
+    // Rate Limiting
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1";
+    const { success } = await emailLimiter.limit(ip);
+
+    if (!success) {
+        return NextResponse.json(
+            { message: "Too many requests. Please check your email or try again in an hour." },
+            { status: 429 }
+        );
+    }
+
     try {
         const body = await req.json();
         const { email } = resendSchema.parse(body);
