@@ -25,9 +25,33 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Invalid input" }, { status: 400 });
         }
 
+        // Collect all unique tag names first
+        const allTagNames = new Set<string>();
+        items.forEach(item => {
+            if (item.tags && Array.isArray(item.tags)) {
+                item.tags.forEach((tag: string) => {
+                    const cleanTag = tag.trim();
+                    if (cleanTag) allTagNames.add(cleanTag);
+                });
+            }
+        });
+
+        // Pre-fetch or create all tags OUTSIDE the main transaction to avoid timeout
+        const tagMap = new Map<string, string>(); // name -> id
+        for (const tagName of allTagNames) {
+            let tag = await prisma.tag.findFirst({ where: { name: tagName } });
+            if (!tag) {
+                tag = await prisma.tag.create({ data: { name: tagName } });
+            }
+            tagMap.set(tagName, tag.id);
+        }
+
+        console.log("[Bulk API] Pre-created/fetched", tagMap.size, "tags");
+
         const results: any[] = [];
         let currentRank = LexoRank.middle();
 
+        // Now do the bulk creation in a shorter transaction
         await prisma.$transaction(async (tx) => {
             for (const itemData of items) {
                 const { title, tags, description, imageUrl } = itemData;
@@ -52,31 +76,29 @@ export async function POST(req: NextRequest) {
                     }
                 });
 
-                // Handle tags
+                // Handle tags - now we just create the relations since tags already exist
                 if (tags && Array.isArray(tags)) {
                     for (const tagName of tags) {
                         const cleanTag = tagName.trim();
                         if (!cleanTag) continue;
 
-                        // Find or create tag
-                        let tag = await tx.tag.findFirst({ where: { name: cleanTag } });
-                        if (!tag) {
-                            tag = await tx.tag.create({ data: { name: cleanTag } });
+                        const tagId = tagMap.get(cleanTag);
+                        if (tagId) {
+                            await tx.itemTag.create({
+                                data: {
+                                    itemId: newItem.id,
+                                    tagId: tagId
+                                }
+                            });
                         }
-
-                        // Create ItemTag relation
-                        await tx.itemTag.create({
-                            data: {
-                                itemId: newItem.id,
-                                tagId: tag.id
-                            }
-                        });
                     }
                 }
 
                 results.push(newItem);
                 currentRank = currentRank.genNext();
             }
+        }, {
+            timeout: 30000, // Increase timeout to 30 seconds
         });
 
         console.log("[Bulk API] Successfully saved", results.length, "items");
