@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Header } from "../../components/Header";
 import posthog from "posthog-js";
 
@@ -194,6 +195,15 @@ export default function NewItemPage() {
                 </div>
 
                 <div className="max-w-2xl mx-auto w-full bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 border border-white/10 overflow-hidden p-6 sm:p-8 relative z-10">
+                    <div className="mb-8 text-gray-300 leading-relaxed bg-indigo-500/5 p-4 rounded-lg border border-indigo-500/10">
+                        <p className="text-sm sm:text-base">
+                            Favorite movie? Book? Hotel? Nail polish color? Football player? Drop it in the &quot;headline/title&quot; box and hit &quot;search&quot; to add it to your list of favorites. Rank, tag and share your favorites with friends.
+                        </p>
+                        <p className="mt-3 text-sm sm:text-base">
+                            Have a bunch of favorites and recommendations to add? Try our <Link href="/items/paste" className="text-indigo-400 hover:text-indigo-300 font-bold underline underline-offset-4 decoration-indigo-500/50 hover:decoration-indigo-500 transition-all">Smart Paste</Link> feature to copy/paste them over from Notes, spreadsheets and documents.
+                        </p>
+                    </div>
+
                     <form onSubmit={(e) => { e.preventDefault(); }} className="space-y-6">
                         {/* Title & Auto-Fill */}
                         <div>
