@@ -7,8 +7,6 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
   defaults: '2025-11-30',
   // Enables capturing unhandled exceptions via Error Tracking
   capture_exceptions: true,
-  // Strict Privacy: Opt-out by default until user gives consent via CookieBanner
-  opt_out_capturing_by_default: true,
   // Turn on debug in development mode
   debug: process.env.NODE_ENV === "development",
 });
