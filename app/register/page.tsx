@@ -18,9 +18,9 @@ function RegisterForm() {
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
-    // Load saved Top 10 list from localStorage
+    // Load saved Top 5 list from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("tempTop10");
+        const saved = localStorage.getItem("tempTop5");
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);

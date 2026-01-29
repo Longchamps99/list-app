@@ -104,7 +104,7 @@ export default function LandingPage() {
     const posthog = usePostHog();
     // We store objects with IDs to help DnD tracking
     const [movies, setMovies] = useState<{ id: string; value: string }[]>(
-        Array(10).fill(null).map((_, i) => ({ id: `item-${i}`, value: "" }))
+        Array(5).fill(null).map((_, i) => ({ id: `item-${i}`, value: "" }))
     );
     const [focusedId, setFocusedId] = useState<string | null>(null);
 
@@ -125,7 +125,7 @@ export default function LandingPage() {
 
     // Load/Save Logic
     useEffect(() => {
-        const saved = localStorage.getItem("tempTop10");
+        const saved = localStorage.getItem("tempTop5");
         if (saved) {
             try {
                 // Determine format (array of strings vs objects)
@@ -160,7 +160,7 @@ export default function LandingPage() {
         // or update Register page to handle objects. Register page expects string[].
         // Let's save as string[] for compatibility with existing register flow.
         const simpleList = movies.map(m => m.value);
-        localStorage.setItem("tempTop10", JSON.stringify(simpleList));
+        localStorage.setItem("tempTop5", JSON.stringify(simpleList));
     }, [movies]);
 
 
@@ -241,7 +241,7 @@ export default function LandingPage() {
         });
 
         const simpleList = movies.map(m => m.value);
-        localStorage.setItem("tempTop10", JSON.stringify(simpleList));
+        localStorage.setItem("tempTop5", JSON.stringify(simpleList));
         router.push("/register");
     };
 
@@ -303,7 +303,7 @@ export default function LandingPage() {
                                 </motion.div>
 
                                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight min-h-[160px] lg:min-h-[220px]">
-                                    My Top 10
+                                    My Top 5
                                     <span className="block bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent leading-relaxed pb-2">
                                         {displayText}
                                         <motion.span
@@ -315,7 +315,7 @@ export default function LandingPage() {
                                 </h1>
 
                                 <p className="text-xl text-gray-300 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                                    Create, share, and discover personalized Top 10 lists for anything. Track your favorites,
+                                    Create, share, and discover personalized ranked lists for anything. Track your favorites,
                                     connect with friends, and build your ultimate vault.
                                 </p>
 
@@ -356,7 +356,7 @@ export default function LandingPage() {
                                                 <div className="flex items-center justify-between mb-6">
                                                     <h3 className="text-2xl font-bold flex items-center gap-2 text-white">
                                                         <Star className="h-6 w-6 text-yellow-400 fill-yellow-400" />
-                                                        My Top 10 Movies
+                                                        My Top 5 Movies
                                                     </h3>
                                                     <span className="text-xs font-bold px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded uppercase tracking-wider">Draft</span>
                                                 </div>

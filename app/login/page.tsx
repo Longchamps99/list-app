@@ -35,6 +35,34 @@ function LoginForm() {
                 method: 'credentials',
             });
 
+            // Check for onboarding list
+            const saved = localStorage.getItem("tempTop5");
+            if (saved) {
+                try {
+                    const items = JSON.parse(saved).filter((item: string) => item.trim() !== "");
+                    if (items.length > 0) {
+                        // Create the onboarding list
+                        const response = await fetch("/api/lists/onboarding", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                items,
+                                title: "My Top 5 Movies"
+                            }),
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            localStorage.removeItem("tempTop5");
+                            router.push(`/lists/${data.listId}`);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to create onboarding list:", error);
+                }
+            }
+
             router.push(callbackUrl);
         } else {
             // Capture failed login attempt

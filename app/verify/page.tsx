@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Header } from "../components/Header";
 import { Star, CheckCircle, XCircle, ArrowRight } from "lucide-react";
+import { OnboardingHandler } from "./OnboardingHandler";
 
 export default async function VerifyPage(props: {
     searchParams: Promise<{ token: string }>;
@@ -58,8 +59,9 @@ export default async function VerifyPage(props: {
         return (
             <VerificationLayout
                 title="Email Verified!"
-                message="Your email has been successfully verified. You can now log in to your account."
+                message="Your email has been successfully verified. We're setting up your account..."
                 status="success"
+                userEmail={verificationToken.identifier}
             />
         );
     } catch (error) {
@@ -77,11 +79,13 @@ export default async function VerifyPage(props: {
 function VerificationLayout({
     title,
     message,
-    status
+    status,
+    userEmail
 }: {
     title: string;
     message: string;
-    status: 'success' | 'error'
+    status: 'success' | 'error';
+    userEmail?: string;
 }) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col">
@@ -110,8 +114,10 @@ function VerificationLayout({
                         <h1 className="text-3xl font-bold text-white mb-4">{title}</h1>
                         <p className="text-gray-400 mb-8">{message}</p>
 
+                        {userEmail && <OnboardingHandler userEmail={userEmail} />}
+
                         <div className="space-y-4">
-                            {status === 'success' ? (
+                            {status === 'success' && !userEmail && (
                                 <Link
                                     href="/login"
                                     className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 rounded-xl text-base font-bold text-white shadow-lg hover:shadow-indigo-500/50 hover:-translate-y-0.5 transition-all"
@@ -119,7 +125,8 @@ function VerificationLayout({
                                     Continue to Login
                                     <ArrowRight className="h-5 w-5" />
                                 </Link>
-                            ) : (
+                            )}
+                            {status === 'error' && (
                                 <Link
                                     href="/register"
                                     className="flex items-center justify-center gap-2 w-full bg-slate-800 hover:bg-slate-700 border border-white/10 px-6 py-4 rounded-xl text-base font-bold text-white transition-all"
