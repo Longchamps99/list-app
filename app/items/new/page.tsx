@@ -143,14 +143,20 @@ export default function NewItemPage() {
                 })
             });
 
+            console.log("Create item response status:", res.status, res.statusText);
+
             if (res.ok) {
+                const data = await res.json();
+                console.log("Item created successfully:", data);
                 router.push("/dashboard");
             } else {
-                alert("Failed to create item");
+                const errorText = await res.text();
+                console.error("Failed to create item. Status:", res.status, "Response:", errorText);
+                alert(`Failed to create item: ${res.statusText}`);
             }
         } catch (e) {
-            console.error(e);
-            alert("Error");
+            console.error("Error creating item:", e);
+            alert("Error creating item. Please try again.");
         }
     };
 

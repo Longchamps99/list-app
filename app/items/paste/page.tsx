@@ -89,16 +89,21 @@ export default function SmartPastePage() {
                 body: JSON.stringify({ items: parsedItems })
             });
 
+            console.log("Bulk save response status:", res.status, res.statusText);
+
             if (res.ok) {
                 const data = await res.json();
+                console.log("Bulk save successful:", data);
                 posthog.capture('smart_paste_saved', { count: data.count });
                 router.push("/dashboard");
             } else {
-                alert("Failed to save items. Please try again.");
+                const errorText = await res.text();
+                console.error("Failed to save items. Status:", res.status, "Response:", errorText);
+                alert(`Failed to save items: ${res.statusText}`);
             }
         } catch (e) {
-            console.error(e);
-            alert("An error occurred while saving.");
+            console.error("Error saving items:", e);
+            alert("An error occurred while saving. Please try again.");
         } finally {
             setIsSaving(false);
         }
