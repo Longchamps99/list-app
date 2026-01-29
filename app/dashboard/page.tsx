@@ -248,6 +248,24 @@ export default function Dashboard() {
 
     const SidebarContent = (
         <div className="p-6">
+            {/* Search Bar in Sidebar */}
+            <div className="mb-8 relative">
+                <div className="relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-full pl-10 pr-4 py-2 bg-slate-800/50 border border-white/10 rounded-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm text-white placeholder-gray-500"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+            </div>
+
             <div className="flex items-center justify-between mb-4">
                 <h2 className="font-bold text-white uppercase tracking-wider text-xs opacity-50">My Smart Lists</h2>
                 <button
@@ -345,29 +363,7 @@ export default function Dashboard() {
                 </AnimatePresence>
 
                 <main className="flex-1 p-8 min-w-0 relative z-10">
-                    <div className="mb-6 flex items-center justify-between">
-                        <div className="flex-1 max-w-2xl relative">
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="w-full pl-10 pr-20 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm text-white placeholder-gray-500"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                                <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-400 bg-slate-700/50 border border-white/10 rounded">
-                                        ⌘K
-                                    </kbd>
-                                </div>
-                            </div>
-                        </div>
-
+                    <div className="mb-6 flex items-center justify-end">
                         <div className="flex items-center gap-3">
                             <Link
                                 href="/items/new"
