@@ -150,24 +150,29 @@ export async function POST(req: Request) {
             });
         }
 
-        // Capture item created event
-        const posthog = getPostHogClient();
-        posthog.capture({
-            distinctId: userId,
-            event: 'item_created',
-            properties: {
-                item_id: item.id,
-                title: title,
-                has_image: !!imageUrl,
-                has_link: !!link,
-                has_location: !!location,
-                tag_count: tagNames.length,
-            }
-        });
+        // Capture item created event (don't let analytics failures break item creation)
+        try {
+            const posthog = getPostHogClient();
+            posthog.capture({
+                distinctId: userId,
+                event: 'item_created',
+                properties: {
+                    item_id: item.id,
+                    title: title,
+                    has_image: !!imageUrl,
+                    has_link: !!link,
+                    has_location: !!location,
+                    tag_count: tagNames.length,
+                }
+            });
+        } catch (analyticsError) {
+            console.error("PostHog capture failed:", analyticsError);
+            // Continue anyway - analytics failure shouldn't break item creation
+        }
 
         return NextResponse.json(item);
     } catch (error) {
-        console.error(error);
+        console.error("Item creation error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }
