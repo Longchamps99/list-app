@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
+import { LexoRank } from "lexorank";
 
 export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
@@ -25,58 +26,56 @@ export async function POST(req: NextRequest) {
         }
 
         const results: any[] = [];
-        let index = 0;
+        let currentRank = LexoRank.middle();
 
         await prisma.$transaction(async (tx) => {
             for (const itemData of items) {
                 const { title, tags, description, imageUrl } = itemData;
 
-                const tagConnections = [];
+                // Create the item first
+                const newItem = await tx.item.create({
+                    data: {
+                        title: title,
+                        content: description || "",
+                        imageUrl: imageUrl || null,
+                        ownerId: userId,
+                    }
+                });
+
+                // Create the rank entry for dashboard
+                await tx.itemRank.create({
+                    data: {
+                        itemId: newItem.id,
+                        contextId: "dashboard",
+                        userId: userId,
+                        rank: currentRank.toString(),
+                    }
+                });
+
+                // Handle tags
                 if (tags && Array.isArray(tags)) {
                     for (const tagName of tags) {
                         const cleanTag = tagName.trim();
                         if (!cleanTag) continue;
 
+                        // Find or create tag
                         let tag = await tx.tag.findFirst({ where: { name: cleanTag } });
                         if (!tag) {
                             tag = await tx.tag.create({ data: { name: cleanTag } });
                         }
-                        tagConnections.push({ id: tag.id });
+
+                        // Create ItemTag relation
+                        await tx.itemTag.create({
+                            data: {
+                                itemId: newItem.id,
+                                tagId: tag.id
+                            }
+                        });
                     }
                 }
 
-                const newItem = await tx.item.create({
-                    data: {
-                        title: title,
-                        // Use description for content if available
-                        content: description || "",
-                        imageUrl: imageUrl || null,
-                        ownerId: userId,
-                        ranks: {
-                            create: {
-                                userId: userId,
-                                contextId: "dashboard",
-                                rank: "0|" + Date.now().toString() + index
-                            }
-                        },
-                        tags: {
-                            create: tagConnections.map(tag => ({
-                                tag: { connect: { id: tag.id } }
-                            }))
-                        }
-                    }
-                });
-                index++;
-
-                // Actually, wait. The schema for 'Item' and 'Rank' needs to be checked.
-                // In Dashboard code: newItems[newIndex].ranks[0] = { rank: newRankStr };
-                // So Item has a relation to Rank.
-                // Does Item creation fail if I don't provide Rank?
-
-                // Let's check schema.prisma first?
-                // Assuming standard relation
-
                 results.push(newItem);
+                currentRank = currentRank.genNext();
             }
         });
 
