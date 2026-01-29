@@ -26,6 +26,7 @@ export const metadata: Metadata = {
 
 import { Suspense } from "react";
 import PostHogPageView from "./components/PostHogPageView";
+import CookieBanner from "./components/CookieBanner";
 
 export default function RootLayout({
   children,
@@ -42,6 +43,7 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <PostHogPageView />
           </Suspense>
+          <CookieBanner />
           {children}
         </Providers>
       </body>

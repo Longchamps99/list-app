@@ -72,17 +72,53 @@ export default function SettingsPage() {
                                 <h2 className="text-xl font-bold">Privacy</h2>
                             </div>
 
-                            <p className="text-gray-400 text-sm mb-4">
-                                We respect your privacy. You can request a copy of your data or delete your account at any time.
-                            </p>
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-300 mb-2">Analytics Tracking</h3>
+                                    <p className="text-gray-400 text-xs mb-4">
+                                        We use PostHog to help us understand how people use Vaulted. This data is anonymized and helps us prioritize features.
+                                    </p>
+                                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-white/5">
+                                        <div className="text-sm">
+                                            <p className="font-medium">Anonymous Usage Data</p>
+                                            <p className="text-gray-500 text-xs">Improve Vaulted by sharing usage patterns</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const current = localStorage.getItem("cookie_consent") === "accepted";
+                                                const newValue = !current ? "accepted" : "declined";
+                                                localStorage.setItem("cookie_consent", newValue);
+                                                if (newValue === "accepted") {
+                                                    import("posthog-js").then(ph => ph.default.opt_in_capturing());
+                                                } else {
+                                                    import("posthog-js").then(ph => ph.default.opt_out_capturing());
+                                                }
+                                                // Force re-render if needed, though for simplicity we just toggle local storage
+                                                window.location.reload(); // Simple way to sync for now
+                                            }}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ring-2 ring-transparent ring-offset-2 ring-offset-slate-900 ${(typeof window !== 'undefined' && localStorage.getItem("cookie_consent") === "accepted") ? 'bg-indigo-600' : 'bg-slate-700'
+                                                }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${(typeof window !== 'undefined' && localStorage.getItem("cookie_consent") === "accepted") ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
 
-                            <div className="flex gap-4">
-                                <button
-                                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition-colors"
-                                    onClick={() => alert("Data export coming soon!")}
-                                >
-                                    Export My Data
-                                </button>
+                                <div className="pt-4 border-t border-white/5">
+                                    <h3 className="text-sm font-medium text-gray-300 mb-2">Data Management</h3>
+                                    <p className="text-gray-400 text-xs mb-4">
+                                        You can request a copy of your data or delete your account at any time.
+                                    </p>
+                                    <button
+                                        className="px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/20 text-indigo-400 rounded-lg text-sm font-medium transition-colors"
+                                        onClick={() => alert("Data export coming soon!")}
+                                    >
+                                        Export My Data
+                                    </button>
+                                </div>
                             </div>
                         </section>
 
