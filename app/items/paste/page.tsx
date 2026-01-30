@@ -4,8 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "../../components/Header";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, ArrowRight, Trash2, CheckCircle, AlertCircle, ImageIcon } from "lucide-react";
+import { Sparkles, ArrowRight, Trash2, CheckCircle, AlertCircle, ImageIcon, Plus, X, Loader2 } from "lucide-react";
 import posthog from "posthog-js";
+import { SafeImage } from "../../../components/SafeImage";
+import {
+    tagPillClass,
+    primaryButtonClass,
+    secondaryButtonClass,
+    inputClass,
+    cardClass
+} from "../../components/styles";
 
 interface ParsedItem {
     id: string; // temp id for UI
@@ -131,41 +139,62 @@ export default function SmartPastePage() {
                             exit={{ opacity: 0, y: -20 }}
                             className="space-y-6"
                         >
-                            <div className="text-center mb-8">
-                                <span className="inline-flex items-center justify-center p-3 bg-indigo-500/10 rounded-full mb-4 ring-1 ring-indigo-500/30">
-                                    <Sparkles className="h-6 w-6 text-indigo-400" />
+                            <div className="text-center mb-12">
+                                <span className="inline-flex items-center justify-center p-4 bg-indigo-500/10 rounded-full mb-6 ring-2 ring-indigo-500/20 shadow-xl shadow-indigo-500/10">
+                                    <Sparkles className="h-8 w-8 text-indigo-400" />
                                 </span>
-                                <h1 className="text-3xl font-bold mb-2">Paste Your List</h1>
-                                <p className="text-gray-400">
-                                    Copy valid text from your Notes, Excel, or Docs. We'll clean it up and automatically tag it using AI.
+                                <h1 className="text-4xl font-bold mb-4 text-white tracking-tight">Smart Paste</h1>
+                                <p className="text-lg text-gray-400 max-w-xl mx-auto leading-relaxed">
+                                    Copy valid text from your Notes, Excel, or Docs. We&apos;ll clean it up and automatically enrich it using Gemini AI.
                                 </p>
                             </div>
 
-                            <div className="relative">
-                                <textarea
-                                    className="w-full h-64 bg-slate-900/50 border border-white/10 rounded-xl p-6 text-lg placeholder-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-mono resize-none appearance-none outline-none"
-                                    placeholder={`1. The Matrix\n2. Inception\n3. Interstellar\n...`}
-                                    value={rawText}
-                                    onChange={(e) => setRawText(e.target.value)}
-                                />
-                                <div className="absolute bottom-4 right-4 text-xs text-gray-500">
-                                    {rawText.split(/\n/).length} lines
-                                </div>
+                            <div className="relative group">
+                                <motion.div
+                                    animate={{
+                                        boxShadow: [
+                                            "0 0 0px 0px rgba(99, 102, 241, 0)",
+                                            "0 0 30px 4px rgba(99, 102, 241, 0.4)",
+                                            "0 0 0px 0px rgba(99, 102, 241, 0)"
+                                        ],
+                                        borderColor: ["rgba(255,255,255,0.1)", "rgba(99, 102, 241, 0.5)", "rgba(255,255,255,0.1)"]
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                    className="relative bg-slate-800/50 backdrop-blur-xl border-2 rounded-2xl overflow-hidden p-1 transition-all hover:border-indigo-500/50 shadow-2xl"
+                                >
+                                    <textarea
+                                        autoFocus
+                                        className="w-full h-80 bg-transparent border-none p-8 text-lg placeholder-gray-600 focus:ring-0 transition-all font-mono resize-none appearance-none outline-none text-white"
+                                        placeholder={`1. The Matrix\n2. Inception\n3. Interstellar\n...`}
+                                        value={rawText}
+                                        onChange={(e) => setRawText(e.target.value)}
+                                    />
+                                    <div className="absolute bottom-6 right-6 text-xs font-bold text-indigo-400/60 uppercase tracking-widest">
+                                        {rawText.split(/\n/).filter(l => l.trim()).length} Items Detected
+                                    </div>
+                                </motion.div>
+                                <p className="text-center mt-6 text-indigo-400/60 font-medium animate-pulse text-xs tracking-widest uppercase">
+                                    AI-powered list detection active
+                                </p>
                             </div>
 
                             <button
                                 onClick={handleProcess}
                                 disabled={!rawText.trim() || isProcessing}
-                                className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className={`${primaryButtonClass} w-full py-5 text-lg flex items-center justify-center gap-3 rounded-2xl`}
                             >
                                 {isProcessing ? (
                                     <>
-                                        <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <Loader2 className="h-6 w-6 animate-spin" />
                                         Processing with Gemini AI...
                                     </>
                                 ) : (
                                     <>
-                                        Process List <ArrowRight className="h-5 w-5" />
+                                        Process List <ArrowRight className="h-6 w-6" />
                                     </>
                                 )}
                             </button>
@@ -184,7 +213,7 @@ export default function SmartPastePage() {
                                 </div>
                                 <button
                                     onClick={() => setStep("input")}
-                                    className="text-sm text-gray-500 hover:text-white transition-colors"
+                                    className={`${secondaryButtonClass} py-2 px-4 text-xs font-bold uppercase tracking-widest`}
                                 >
                                     Back to Edit
                                 </button>
@@ -192,75 +221,79 @@ export default function SmartPastePage() {
 
                             <div className="space-y-4">
                                 {parsedItems.map((item) => (
-                                    <div key={item.id} className="bg-slate-900 border border-white/10 rounded-lg p-4 flex gap-4 group hover:border-indigo-500/30 transition-colors">
+                                    <div key={item.id} className={`${cardClass} flex gap-6 p-6 group relative`}>
                                         {/* Image Preview */}
-                                        <div className="w-24 h-24 bg-black/40 rounded-lg flex-shrink-0 overflow-hidden border border-white/5 relative">
-                                            {item.imageUrl ? (
-                                                <img
-                                                    src={item.imageUrl}
-                                                    alt={item.title}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                                    }}
-                                                />
-                                            ) : null}
-                                            <div className={`absolute inset-0 flex items-center justify-center text-gray-600 ${item.imageUrl ? 'hidden' : ''}`}>
-                                                <ImageIcon className="h-8 w-8" />
-                                            </div>
+                                        <div className="w-24 h-24 sm:w-28 sm:h-28 bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden border-2 border-indigo-500/20 shadow-lg relative">
+                                            <SafeImage
+                                                src={item.imageUrl}
+                                                alt={item.title}
+                                                className="w-full h-full object-cover"
+                                                fallback={<ImageIcon className="h-10 w-10 text-gray-600" />}
+                                            />
                                         </div>
 
-                                        <div className="flex-1 space-y-3">
+                                        <div className="flex-1 min-w-0 space-y-4">
                                             <div className="flex gap-2">
                                                 <input
                                                     value={item.title}
                                                     onChange={(e) => handleUpdateItem(item.id, { title: e.target.value })}
-                                                    className="flex-1 bg-transparent font-bold text-lg text-white focus:outline-none focus:border-b border-indigo-500 placeholder-white/20"
+                                                    className="flex-1 bg-transparent border-none focus:ring-1 focus:ring-indigo-500/20 rounded-md p-1 -ml-1 text-xl font-bold text-white placeholder-white/10 transition-all"
                                                     placeholder="Item Title"
                                                 />
                                             </div>
 
-                                            <textarea
-                                                value={item.description || ""}
-                                                onChange={(e) => handleUpdateItem(item.id, { description: e.target.value })}
-                                                className="w-full bg-white/5 rounded-md p-2 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-none"
-                                                rows={2}
-                                                placeholder="Add a description..."
-                                            />
+                                            <div className="bg-slate-800/30 rounded-lg p-3 border border-white/5 shadow-inner focus-within:border-indigo-500/30 transition-all">
+                                                <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Description</label>
+                                                <textarea
+                                                    value={item.description || ""}
+                                                    onChange={(e) => handleUpdateItem(item.id, { description: e.target.value })}
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-300 leading-relaxed resize-none overflow-hidden min-h-[60px]"
+                                                    rows={2}
+                                                    placeholder="Add a description..."
+                                                    onInput={(e) => {
+                                                        const target = e.target as HTMLTextAreaElement;
+                                                        target.style.height = 'auto';
+                                                        target.style.height = target.scrollHeight + 'px';
+                                                    }}
+                                                />
+                                            </div>
 
                                             {/* Tags Input Display */}
                                             <div className="flex flex-wrap gap-2 items-center">
                                                 {item.tags.map((tag, i) => (
-                                                    <span key={i} className="px-3 py-1 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-xs font-medium flex items-center gap-1 select-none">
+                                                    <span key={i} className={tagPillClass}>
                                                         #{tag}
                                                         <button
                                                             onClick={() => handleUpdateItem(item.id, { tags: item.tags.filter((_, idx) => idx !== i) })}
-                                                            className="hover:text-red-400 font-bold ml-1 p-0.5 rounded-full hover:bg-white/10 transition"
+                                                            className="ml-1.5 hover:text-red-400 transition-colors"
                                                             title="Remove tag"
                                                         >
-                                                            &times;
+                                                            <X className="h-3 w-3" />
                                                         </button>
                                                     </span>
                                                 ))}
-                                                <input
-                                                    placeholder="+ tag"
-                                                    className="bg-transparent text-xs text-gray-500 focus:outline-none focus:text-white w-20 px-1"
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            const val = e.currentTarget.value.trim();
-                                                            if (val) {
-                                                                handleUpdateItem(item.id, { tags: [...item.tags, val] });
-                                                                e.currentTarget.value = "";
+                                                <div className="relative flex items-center">
+                                                    <Plus className="absolute left-3 h-3 w-3 text-gray-500 pointer-events-none" />
+                                                    <input
+                                                        type="text"
+                                                        className="bg-slate-800/30 border border-dashed border-white/20 rounded-full pl-8 pr-4 py-1 text-[10px] text-white w-28 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 focus:bg-slate-800/50 placeholder:text-gray-500 transition-all font-bold uppercase"
+                                                        placeholder="Tag"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                const val = e.currentTarget.value.trim();
+                                                                if (val) {
+                                                                    handleUpdateItem(item.id, { tags: [...item.tags, val] });
+                                                                    e.currentTarget.value = "";
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                />
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                         <button
                                             onClick={() => handleDeleteItem(item.id)}
-                                            className="text-gray-600 hover:text-red-400 transition-colors self-start p-1"
+                                            className="text-gray-600 hover:text-red-400 transition-colors self-start p-2 hover:bg-red-500/10 rounded-lg"
                                             title="Remove Item"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -272,17 +305,17 @@ export default function SmartPastePage() {
                             <button
                                 onClick={handleSaveAll}
                                 disabled={parsedItems.length === 0 || isSaving}
-                                className="sticky bottom-6 w-full py-4 bg-green-600 hover:bg-green-500 rounded-xl font-bold text-lg shadow-lg shadow-green-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className={`${primaryButtonClass} sticky bottom-6 w-full py-5 text-lg flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 shadow-green-500/20 hover:from-green-500 hover:to-emerald-500`}
                             >
                                 {isSaving ? (
                                     <>
-                                        <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <Loader2 className="h-6 w-6 animate-spin" />
                                         Saving to Vault...
                                     </>
                                 ) : (
                                     <>
-                                        <CheckCircle className="h-5 w-5" />
-                                        Save {parsedItems.length} Items
+                                        <CheckCircle className="h-6 w-6" />
+                                        Save {parsedItems.length} Items to Vault
                                     </>
                                 )}
                             </button>

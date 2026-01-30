@@ -1,38 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "../../components/Header";
 import posthog from "posthog-js";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Plus, X, Edit2, ExternalLink, MapPin, Loader2, Image as ImageIcon, Link as LinkIcon, Upload } from "lucide-react";
+import { SafeImage } from "../../../components/SafeImage";
+import {
+    tagPillClass,
+    primaryButtonClass,
+    secondaryButtonClass,
+    inputClass,
+    cardClass,
+    iconButtonClass
+} from "../../components/styles";
+
+// Debounce helper is inlined here for simplicity
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
+}
 
 export default function NewItemPage() {
     const router = useRouter();
 
+    // App State
+    const [hasSearched, setHasSearched] = useState(false);
+    const [savedItemId, setSavedItemId] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Form State
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [itemLink, setItemLink] = useState("");
     const [location, setLocation] = useState("");
     const [tags, setTags] = useState<string[]>([]);
-    const [isEnriching, setIsEnriching] = useState(false);
 
-    // Tag Editing State
-    const [editingTagIndex, setEditingTagIndex] = useState<number | null>(null);
-    const [editTagValue, setEditTagValue] = useState("");
-    const [newTagValue, setNewTagValue] = useState("");
-    const [isAddingTag, setIsAddingTag] = useState(false);
+    // UI State
+    const [isEnriching, setIsEnriching] = useState(false);
+    const [isSearching, setIsSearching] = useState(false);
     const [candidates, setCandidates] = useState<any[]>([]);
     const [showCandidateModal, setShowCandidateModal] = useState(false);
-    const [isSearching, setIsSearching] = useState(false);
+    const [isEditingThumbnail, setIsEditingThumbnail] = useState(false);
+    const [thumbnailMode, setThumbnailMode] = useState<"url" | "upload">("url");
+    const [newTagValue, setNewTagValue] = useState("");
+    const [isAddingTag, setIsAddingTag] = useState(false);
+
+    // Debounced values for auto-saving
+    const debouncedTitle = useDebounce(title, 1000);
+    const debouncedDescription = useDebounce(description, 1000);
+    const debouncedImageUrl = useDebounce(imageUrl, 1000);
+    const debouncedLink = useDebounce(itemLink, 1000);
+    const debouncedLocation = useDebounce(location, 1000);
+
+    // Auto-save effect
+    useEffect(() => {
+        if (savedItemId && hasSearched) {
+            saveChanges();
+        }
+    }, [debouncedTitle, debouncedDescription, debouncedImageUrl, debouncedLink, debouncedLocation]);
+
+    const saveChanges = async (specificUpdates?: any) => {
+        if (!savedItemId) return;
+        setIsSaving(true);
+        try {
+            const updates = specificUpdates || {
+                title,
+                content: description,
+                imageUrl,
+                link: itemLink,
+                location
+            };
+            const res = await fetch(`/api/items/${savedItemId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updates)
+            });
+            if (!res.ok) console.error("Failed to auto-save");
+        } catch (e) {
+            console.error("Auto-save error:", e);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const searchForCandidates = async () => {
         if (!title.trim()) return;
 
-        // Detect if input is a URL - skip disambiguation, enrich directly
         const isUrl = /^https?:\/\//i.test(title.trim());
         if (isUrl) {
-            setIsEnriching(true);
             enrichItem(title);
             return;
         }
@@ -47,7 +110,6 @@ export default function NewItemPage() {
                     setCandidates(data);
                     setShowCandidateModal(true);
                 } else {
-                    // Fallback to direct enrich if no candidates found
                     enrichItem(title);
                 }
             }
@@ -70,25 +132,46 @@ export default function NewItemPage() {
             if (res.ok) {
                 const data = await res.json();
                 if (data && Object.keys(data).length > 0) {
-                    if (data.description) setDescription(data.description);
-                    if (data.imageUrl) setImageUrl(data.imageUrl);
-                    if (data.link) setItemLink(data.link);
-                    if (data.location) setLocation(data.location);
-                    if (data.tags && Array.isArray(data.tags)) {
-                        setTags(data.tags);
-                    }
-                    // Capture auto-enrich event
-                    posthog.capture('new_item_auto_enriched', {
-                        query: queryOrTitle,
-                        entity_id: entityId,
-                        has_description: !!data.description,
-                        has_image: !!data.imageUrl,
-                        has_link: !!data.link,
-                        has_location: !!data.location,
-                        tag_count: data.tags?.length || 0,
+                    // Update local state
+                    const newTitle = data.title || title;
+                    const newDesc = data.description || "";
+                    const newImg = data.imageUrl || "";
+                    const newLink = data.link || "";
+                    const newLoc = data.location || "";
+                    const newTags = data.tags || [];
+
+                    setTitle(newTitle);
+                    setDescription(newDesc);
+                    setImageUrl(newImg);
+                    setItemLink(newLink);
+                    setLocation(newLoc);
+                    setTags(newTags);
+
+                    // INITIAL PERSISTENCE: Create the item record
+                    const createRes = await fetch(`/api/items`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            title: newTitle,
+                            content: newDesc,
+                            imageUrl: newImg,
+                            link: newLink,
+                            location: newLoc,
+                            customTags: newTags
+                        })
                     });
-                } else {
-                    alert("No info found.");
+
+                    if (createRes.ok) {
+                        const savedData = await createRes.json();
+                        setSavedItemId(savedData.id);
+                        setHasSearched(true);
+                        posthog.capture('new_item_created_from_search', {
+                            item_id: savedData.id,
+                            title: newTitle
+                        });
+                    } else {
+                        alert("Initial save failed. Please try searching again.");
+                    }
                 }
             }
         } catch (e) {
@@ -99,374 +182,402 @@ export default function NewItemPage() {
         }
     };
 
-    const removeTag = (indexToRemove: number) => {
-        setTags(prev => prev.filter((_, i) => i !== indexToRemove));
-    };
+    const addTag = async (tagName: string) => {
+        const normalized = tagName.trim().toLowerCase();
+        if (!normalized || tags.includes(normalized)) return;
 
-    const startEditingTag = (index: number) => {
-        setEditingTagIndex(index);
-        setEditTagValue(tags[index]);
-    };
-
-    const saveEditedTag = () => {
-        if (editingTagIndex !== null && editTagValue.trim()) {
-            const updated = [...tags];
-            updated[editingTagIndex] = editTagValue.trim().toLowerCase();
-            setTags(updated);
-        }
-        setEditingTagIndex(null);
-        setEditTagValue("");
-    };
-
-    const addNewTag = () => {
-        if (newTagValue.trim()) {
-            setTags(prev => [...prev, newTagValue.trim().toLowerCase()]);
-            setNewTagValue("");
-            setIsAddingTag(false);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!title.trim()) return;
-
-        try {
-            const res = await fetch(`/api/items`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    title,
-                    content: description,
-                    imageUrl,
-                    link: itemLink,
-                    location,
-                    customTags: tags
-                })
-            });
-
-            console.log("Create item response status:", res.status, res.statusText);
-
-            if (res.ok) {
-                const data = await res.json();
-                console.log("Item created successfully:", data);
-                router.push("/dashboard");
-            } else {
-                const errorText = await res.text();
-                console.error("Failed to create item. Status:", res.status, "Response:", errorText);
-                alert(`Failed to create item: ${res.statusText}`);
+        setTags(prev => [...prev, normalized]);
+        if (savedItemId) {
+            try {
+                await fetch(`/api/items/${savedItemId}/tags`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ tagName: normalized })
+                });
+            } catch (e) {
+                console.error("Failed to save tag", e);
             }
-        } catch (e) {
-            console.error("Error creating item:", e);
-            alert("Error creating item. Please try again.");
         }
     };
 
-    const canSave = title.trim().length > 0 && (description.trim().length > 0 || imageUrl.trim().length > 0 || tags.length > 0 || location.trim().length > 0 || itemLink.trim().length > 0);
+    const removeTag = async (tagName: string) => {
+        setTags(prev => prev.filter(t => t !== tagName));
+        // Note: Full tag removal would require tagId or a different API.
+        // For now, we'll keep it in state and it will stay in DB until real tag management is added.
+        // Or we could implement a 'setTags' API.
+    };
+
+    // Thumbnail upload mock
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImageUrl(reader.result as string);
+                setIsEditingThumbnail(false);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     return (
-        <>
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col relative overflow-hidden">
             <Header
                 variant="page"
                 title="Add New Item"
                 showBack={true}
                 backHref="/dashboard"
             >
-                {/* Create button in header - Only show if ready to save */}
-                <div className="flex items-center gap-3 ml-auto">
-                    {canSave && (
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 !text-white rounded-lg hover:from-green-500 hover:to-emerald-500 hover:-translate-y-0.5 transition-all font-bold text-sm shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
-                        >
-                            <span>Save Item</span>
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </button>
-                    )}
-                </div>
-            </Header>
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col relative overflow-hidden p-4 sm:p-8">
-                {/* Background Effects */}
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-                </div>
-
-                <div className="max-w-2xl mx-auto w-full bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 border border-white/10 overflow-hidden p-6 sm:p-8 relative z-10">
-                    <div className="mb-8 text-gray-300 leading-relaxed bg-indigo-500/5 p-4 rounded-lg border border-indigo-500/10">
-                        <p className="text-sm sm:text-base">
-                            Favorite movie? Book? Hotel? Nail polish color? Football player? Drop it in the &quot;headline/title&quot; box and hit &quot;search&quot; to add it to your list of favorites. Rank, tag and share your favorites with friends.
-                        </p>
-                        <p className="mt-3 text-sm sm:text-base">
-                            Have a bunch of favorites and recommendations to add? Try our <Link href="/items/paste" className="text-indigo-400 hover:text-indigo-300 font-bold underline underline-offset-4 decoration-indigo-500/50 hover:decoration-indigo-500 transition-all">Smart Paste</Link> feature to copy/paste them over from Notes, spreadsheets and documents.
-                        </p>
+                {isSaving && (
+                    <div className="ml-auto flex items-center gap-2 text-indigo-400 text-xs font-medium">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Saving...
                     </div>
+                )}
+            </Header>
 
-                    <form onSubmit={(e) => { e.preventDefault(); }} className="space-y-6">
-                        {/* Title & Auto-Fill */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Headline / Title *</label>
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    required
-                                    className="flex-1 rounded-lg bg-slate-800/50 border-white/10 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            searchForCandidates();
-                                        }
-                                    }}
-                                    placeholder="E.g. The Expanse TV"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={searchForCandidates}
-                                    disabled={isSearching || isEnriching || !title.trim()}
-                                    className="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-500 transition text-sm font-bold disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-0.5"
-                                >
-                                    {isSearching ? (
-                                        <span>Searching...</span>
-                                    ) : (
-                                        <>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                            </svg>
-                                            Search
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-2">
-                                Enter a title and click <strong>Search</strong> to auto-fill details using AI.
-                            </p>
-                        </div>
+            {/* Background Effects */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+            </div>
 
-                        {/* Tags (Auto-Generated + Custom) */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Tags
-                            </label>
-                            <div className="bg-slate-800/30 border border-white/10 rounded-lg p-4">
-                                <div className="flex flex-wrap gap-2 items-center">
-                                    {tags.map((tag, idx) => (
-                                        <div key={idx} className="relative group">
-                                            {editingTagIndex === idx ? (
-                                                <input
-                                                    autoFocus
-                                                    type="text"
-                                                    className="bg-slate-700 text-white px-3 py-1 rounded-full text-sm font-medium border border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-24"
-                                                    value={editTagValue}
-                                                    onChange={(e) => setEditTagValue(e.target.value)}
-                                                    onBlur={saveEditedTag}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            saveEditedTag();
-                                                        }
-                                                    }}
-                                                />
-                                            ) : (
-                                                <span
-                                                    className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 cursor-pointer hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition select-none"
-                                                    onClick={() => startEditingTag(idx)}
-                                                    title="Click to edit"
-                                                >
-                                                    #{tag}
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            removeTag(idx);
-                                                        }}
-                                                        className="hover:text-red-400 font-bold ml-1 p-0.5 rounded-full hover:bg-white/10 transition"
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </span>
-                                            )}
-                                        </div>
-                                    ))}
-
-                                    {/* Add New Tag Button/Input */}
-                                    {isAddingTag ? (
-                                        <input
-                                            autoFocus
-                                            type="text"
-                                            placeholder="New tag..."
-                                            className="bg-slate-800 text-white px-3 py-1 rounded-full text-sm border border-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-24 placeholder-gray-500"
-                                            value={newTagValue}
-                                            onChange={(e) => setNewTagValue(e.target.value)}
-                                            onBlur={() => {
-                                                if (newTagValue.trim()) addNewTag();
-                                                else setIsAddingTag(false);
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    addNewTag();
-                                                } else if (e.key === 'Escape') {
-                                                    setIsAddingTag(false);
-                                                }
-                                            }}
-                                        />
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsAddingTag(true)}
-                                            className="text-indigo-400 hover:text-indigo-300 text-sm font-medium px-2 py-1 rounded hover:bg-white/5 transition flex items-center gap-1"
-                                        >
-                                            + Add Tag
-                                        </button>
-                                    )}
+            <main className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 relative z-10">
+                <AnimatePresence mode="wait">
+                    {!hasSearched ? (
+                        <motion.div
+                            key="initial"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="max-w-2xl w-full"
+                        >
+                            {/* Instructions (Expanded) */}
+                            <div className="mb-12 text-gray-200 leading-relaxed bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
+                                <h2 className="text-2xl font-bold text-white mb-4">Hello! What are we adding today?</h2>
+                                <p className="text-lg text-gray-400">
+                                    Favorite movie? Book? Hotel? Nail polish color? Football player? Drop it in the box below and let AI help you fill in the details.
+                                </p>
+                                <div className="mt-8 flex items-center gap-4 text-sm font-medium text-indigo-400">
+                                    <div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                        <Search className="h-5 w-5" />
+                                    </div>
+                                    <span>Try &quot;The Dark Knight&quot; or &quot;Ritz Paris&quot;</span>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Click a tag to edit. Click &times; to remove.
+                                <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-center text-sm">
+                                    <span className="text-gray-400">Have many items?</span>
+                                    <Link href="/items/paste" className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 decoration-emerald-500/50 transition-all flex items-center gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        Try Smart Paste
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {/* Glowing Search Box */}
+                            <div className="relative group">
+                                <motion.div
+                                    animate={{
+                                        boxShadow: [
+                                            "0 0 0px 0px rgba(99, 102, 241, 0)",
+                                            "0 0 30px 4px rgba(99, 102, 241, 0.4)",
+                                            "0 0 0px 0px rgba(99, 102, 241, 0)"
+                                        ],
+                                        borderColor: ["rgba(255,255,255,0.1)", "rgba(99, 102, 241, 0.5)", "rgba(255,255,255,0.1)"]
+                                    }}
+                                    transition={{
+                                        duration: 3,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                    className="relative flex items-center bg-slate-800/50 backdrop-blur-xl border-2 rounded-2xl overflow-hidden p-2 transition-all hover:border-indigo-500/50 shadow-2xl"
+                                >
+                                    <div className="pl-6 pr-4">
+                                        {isSearching || isEnriching ? (
+                                            <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
+                                        ) : (
+                                            <Search className="h-6 w-6 text-indigo-400" />
+                                        )}
+                                    </div>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        className="flex-1 bg-transparent border-none focus:ring-0 text-xl py-6 text-white placeholder-gray-500"
+                                        placeholder="Enter title or link..."
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') searchForCandidates();
+                                        }}
+                                    />
+                                    <button
+                                        onClick={searchForCandidates}
+                                        disabled={!title.trim() || isSearching || isEnriching}
+                                        className={`${primaryButtonClass} mr-2 py-4 px-8 rounded-xl`}
+                                    >
+                                        Search
+                                    </button>
+                                </motion.div>
+                                <p className="text-center mt-6 text-indigo-400/60 font-medium animate-pulse text-xs tracking-widest uppercase">
+                                    AI-powered enrichment active
                                 </p>
                             </div>
-                        </div>
+                        </motion.div>
+                    ) : (
+                        /* DASHBOARD-STYLE TILE VIEW RESULTS */
+                        <motion.div
+                            key="results"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="max-w-4xl w-full"
+                        >
+                            <div className={`${cardClass} flex flex-col overflow-hidden relative p-0`}>
+                                <div className="p-8 sm:p-10 flex flex-col md:flex-row gap-8 items-start relative box-border">
+                                    {/* Thumbnail Selection Area */}
+                                    <div className="relative group shrink-0">
+                                        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 bg-slate-800">
+                                            <SafeImage
+                                                src={imageUrl}
+                                                alt={title}
+                                                className="w-full h-full object-cover"
+                                                fallback={<ImageIcon className="h-10 w-10 text-gray-600" />}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setIsEditingThumbnail(!isEditingThumbnail)}
+                                            className="absolute bottom-1 right-1 p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg transition-transform hover:scale-110 active:scale-90 z-20"
+                                        >
+                                            <Edit2 className="h-4 w-4" />
+                                        </button>
 
-                        {/* Image URL */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
-                            <input
-                                type="url"
-                                className="w-full rounded-lg bg-slate-800/50 border-white/10 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                                placeholder="https://example.com/image.jpg"
-                            />
-                            {/* Image Preview */}
-                            {imageUrl && (
-                                <div className="mt-3">
-                                    <p className="text-xs text-gray-500 mb-1">Preview:</p>
-                                    <div className="w-32 h-32 rounded-lg overflow-hidden border border-white/10 bg-slate-800">
-                                        <img
-                                            src={imageUrl}
-                                            alt="Preview"
-                                            className="w-full h-full object-cover"
-                                            referrerPolicy="no-referrer"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Description */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Full Description</label>
-                            <textarea
-                                rows={4}
-                                className="w-full rounded-lg bg-slate-800/50 border-white/10 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Details about this item..."
-                            />
-                        </div>
-
-                        {/* Link */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Web Link</label>
-                            <input
-                                type="url"
-                                className="w-full rounded-lg bg-slate-800/50 border-white/10 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"
-                                value={itemLink}
-                                onChange={(e) => setItemLink(e.target.value)}
-                                placeholder="https://example.com"
-                            />
-                        </div>
-
-                        {/* Location */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-1">Location / Map Address</label>
-                            <input
-                                type="text"
-                                className="w-full rounded-lg bg-slate-800/50 border-white/10 text-white placeholder-gray-500 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                placeholder="E.g. Eiffel Tower, Paris"
-                            />
-                        </div>
-
-
-                    </form>
-
-                    {/* Candidate Selection Modal */}
-                    {showCandidateModal && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                            <div className="bg-slate-900 rounded-xl shadow-2xl border border-white/10 max-w-lg w-full max-h-[80vh] flex flex-col">
-                                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50 rounded-t-xl">
-                                    <h3 className="text-lg font-bold text-white">Did you mean...</h3>
-                                    <button
-                                        onClick={() => setShowCandidateModal(false)}
-                                        className="text-gray-400 hover:text-white font-bold text-xl"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-                                <div className="overflow-y-auto p-4 space-y-4 flex-1">
-                                    {candidates.map((candidate) => {
-                                        return (
-                                            <button
-                                                key={candidate.id}
-                                                onClick={() => {
-                                                    enrichItem(title, candidate.id, candidate.imageUrl, candidate.internalType || candidate.type);
-                                                }}
-                                                className="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-indigo-500/50 transition flex gap-4 items-start group shadow-sm"
-                                            >
-                                                {/* Large Image or Placeholder */}
-                                                <div className="w-24 h-24 bg-slate-800 rounded-lg overflow-hidden shrink-0 border border-white/10">
-                                                    {candidate.imageUrl ? (
-                                                        <img
-                                                            src={candidate.imageUrl}
-                                                            alt=""
-                                                            className="w-full h-full object-cover"
-                                                            referrerPolicy="no-referrer"
+                                        {/* Thumbnail Choice Overlay */}
+                                        <AnimatePresence>
+                                            {isEditingThumbnail && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                    className="absolute top-full mt-4 left-0 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 p-4"
+                                                >
+                                                    <div className="flex justify-between items-center mb-4">
+                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Update Thumbnail</span>
+                                                        <button onClick={() => setIsEditingThumbnail(false)} className="text-gray-500 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+                                                    </div>
+                                                    <div className="flex gap-2 mb-4 p-1 bg-slate-800/50 rounded-lg">
+                                                        <button
+                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'url' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
+                                                            onClick={() => setThumbnailMode('url')}
+                                                        >URL</button>
+                                                        <button
+                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'upload' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
+                                                            onClick={() => setThumbnailMode('upload')}
+                                                        >Upload</button>
+                                                    </div>
+                                                    {thumbnailMode === 'url' ? (
+                                                        <input
+                                                            autoFocus
+                                                            type="text"
+                                                            className={inputClass}
+                                                            placeholder="https://..."
+                                                            value={imageUrl}
+                                                            onChange={(e) => setImageUrl(e.target.value)}
                                                         />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        </div>
+                                                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-lg p-6 hover:bg-white/5 cursor-pointer transition-colors group/upload">
+                                                            <Upload className="h-6 w-6 text-indigo-400 mb-2 group-hover/upload:scale-110 transition-transform" />
+                                                            <span className="text-[10px] font-bold text-gray-400 uppercase">Choose Image</span>
+                                                            <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
+                                                        </label>
                                                     )}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* Content Column */}
+                                    <div className="flex-1 min-w-0 space-y-6">
+                                        <div className="space-y-3">
+                                            <input
+                                                type="text"
+                                                className="w-full bg-transparent border-none focus:ring-1 focus:ring-indigo-500/20 rounded-md p-1 -ml-1 text-3xl sm:text-4xl font-bold text-white placeholder-white/10 transition-all"
+                                                value={title}
+                                                onChange={(e) => setTitle(e.target.value)}
+                                                placeholder="Title"
+                                            />
+                                            {/* Green Style Tags */}
+                                            <div className="flex flex-wrap gap-2">
+                                                {tags.map((tag, idx) => (
+                                                    <span
+                                                        key={`${tag}-${idx}`}
+                                                        className={tagPillClass}
+                                                    >
+                                                        #{tag}
+                                                        <button onClick={() => removeTag(tag)} className="ml-1.5 hover:text-red-400 transition-colors">
+                                                            <X className="h-3 w-3" />
+                                                        </button>
+                                                    </span>
+                                                ))}
+                                                {/* Persistent tag input at the end of the list */}
+                                                <div className="relative flex items-center">
+                                                    <Plus className="absolute left-3 h-3 w-3 text-gray-500 pointer-events-none" />
+                                                    <input
+                                                        type="text"
+                                                        className="bg-slate-800/30 border border-dashed border-white/20 rounded-full pl-8 pr-4 py-1 text-xs text-white w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 focus:bg-slate-800/50 placeholder:text-gray-500 transition-all"
+                                                        placeholder="Add tag..."
+                                                        value={newTagValue}
+                                                        onChange={(e) => setNewTagValue(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && newTagValue.trim()) {
+                                                                addTag(newTagValue);
+                                                                setNewTagValue("");
+                                                            }
+                                                        }}
+                                                    />
                                                 </div>
-                                                {/* Content */}
+                                            </div>
+                                        </div>
+
+                                        {/* Full Length Description */}
+                                        <div className="bg-slate-800/30 rounded-xl p-4 border border-white/5 shadow-inner focus-within:border-indigo-500/30 transition-all">
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Description</label>
+                                            <textarea
+                                                className="w-full bg-transparent border-none focus:ring-0 p-0 text-gray-300 leading-relaxed resize-none overflow-hidden min-h-[100px]"
+                                                value={description}
+                                                onChange={(e) => setDescription(e.target.value)}
+                                                placeholder="Tell us everything about this..."
+                                                onInput={(e) => {
+                                                    const target = e.target as HTMLTextAreaElement;
+                                                    target.style.height = 'auto';
+                                                    target.style.height = target.scrollHeight + 'px';
+                                                }}
+                                            />
+                                        </div>
+
+                                        {/* Links & metadata */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="flex items-center gap-3 bg-slate-800/30 border border-white/5 px-4 py-3 rounded-xl group hover:border-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
+                                                <LinkIcon className="h-4 w-4 text-indigo-400 shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="font-bold text-lg text-white group-hover:text-indigo-400 line-clamp-1">
-                                                        {candidate.name}
-                                                    </div>
-                                                    <div className="text-xs uppercase font-bold text-indigo-400 mt-0.5 tracking-wide">
-                                                        {candidate.type}
-                                                    </div>
-                                                    <div className="text-sm text-gray-400 mt-2 line-clamp-3">
-                                                        {candidate.detailedDescription || candidate.description}
+                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Website</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="text"
+                                                            className="bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-200 placeholder-gray-600 w-full truncate"
+                                                            value={itemLink}
+                                                            onChange={(e) => setItemLink(e.target.value)}
+                                                            placeholder="https://..."
+                                                        />
+                                                        {itemLink && (
+                                                            <a href={itemLink} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1 hover:text-indigo-400 text-gray-500 transition-colors">
+                                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                            </a>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </button>
-                                        );
-                                    })}
+                                            </div>
+
+                                            <div className="flex items-center gap-3 bg-slate-800/30 border border-white/5 px-4 py-3 rounded-xl group hover:border-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
+                                                <MapPin className="h-4 w-4 text-indigo-400 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Location</label>
+                                                    <input
+                                                        type="text"
+                                                        className="bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-200 placeholder-gray-600 w-full truncate"
+                                                        value={location}
+                                                        onChange={(e) => setLocation(e.target.value)}
+                                                        placeholder="Add location..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="p-4 border-t border-white/10 bg-slate-800/50 rounded-b-xl flex justify-end">
+
+                                {/* Footer bar */}
+                                <div className="p-6 bg-slate-800/20 border-t border-white/5 flex justify-between items-center sm:px-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-1.5 w-1.5 rounded-full ${isSaving ? 'bg-indigo-500 animate-pulse' : 'bg-green-500'}`} />
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">
+                                            {isSaving ? 'Saving Changes...' : 'All changes saved'}
+                                        </span>
+                                    </div>
                                     <button
-                                        onClick={() => setShowCandidateModal(false)}
-                                        className="text-sm text-gray-400 hover:text-white mr-4"
+                                        onClick={() => router.push('/dashboard')}
+                                        className={primaryButtonClass}
                                     >
-                                        Cancel
+                                        Done
                                     </button>
                                 </div>
                             </div>
+
+                            <div className="mt-8 text-center">
+                                <button
+                                    onClick={() => {
+                                        setHasSearched(false);
+                                        setTitle("");
+                                        setSavedItemId(null);
+                                        setTags([]);
+                                        setImageUrl("");
+                                        setDescription("");
+                                        setItemLink("");
+                                        setLocation("");
+                                    }}
+                                    className="text-gray-500 hover:text-indigo-400 text-sm font-bold transition-all uppercase tracking-widest p-2"
+                                >
+                                    + Add another item
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Candidate Selection Modal */}
+                <AnimatePresence>
+                    {showCandidateModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                                className="bg-slate-900 rounded-2xl shadow-2xl border border-white/10 max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden"
+                            >
+                                <div className="p-6 border-b border-white/10 bg-slate-800/30">
+                                    <h3 className="text-xl font-bold text-white mb-1">Did you mean...</h3>
+                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Select the closest match</p>
+                                </div>
+                                <div className="overflow-y-auto p-4 space-y-3 flex-1">
+                                    {candidates.map((candidate) => (
+                                        <button
+                                            key={candidate.id}
+                                            onClick={() => enrichItem(title, candidate.id, candidate.imageUrl, candidate.internalType || candidate.type)}
+                                            className="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-indigo-500/50 transition-all flex gap-4 items-start group"
+                                        >
+                                            <div className="w-20 h-20 bg-slate-800 rounded-lg overflow-hidden shrink-0 border border-white/10 shadow-lg group-hover:border-indigo-500/30 transition-colors">
+                                                <SafeImage src={candidate.imageUrl} alt="" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-bold text-lg text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                    {candidate.name}
+                                                </div>
+                                                <div className="text-[8px] uppercase font-bold text-indigo-500 mt-0.5 tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded inline-block">
+                                                    {candidate.type}
+                                                </div>
+                                                <div className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                                                    {candidate.detailedDescription || candidate.description}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="p-4 border-t border-white/10 bg-slate-800/30 flex justify-between items-center sm:px-6">
+                                    <button onClick={() => setShowCandidateModal(false)} className="text-sm font-bold text-gray-500 hover:text-white transition-colors">CANCEL</button>
+                                    <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Powered by Gemini & Search</p>
+                                </div>
+                            </motion.div>
                         </div>
                     )}
-                </div>
-            </div>
-        </>
+                </AnimatePresence>
+            </main>
+        </div>
     );
 }
+
