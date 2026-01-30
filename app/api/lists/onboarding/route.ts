@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { LexoRank } from "lexorank";
+import { enrichItems } from "@/lib/enrichment";
 
 export async function POST(req: NextRequest) {
     try {
@@ -13,11 +14,16 @@ export async function POST(req: NextRequest) {
         // @ts-ignore - user.id is added in session callback
         const userId = user.id;
 
-        const { items, title } = await req.json();
+        const { items, title } = await req.json() as { items: string[], title: string };
 
-        if (!Array.isArray(items) || items.length === 0) {
+        // Deduplicate items
+        const uniqueItems = Array.from(new Set(items.filter((i: string) => i && i.trim() !== "")));
+
+        if (uniqueItems.length === 0) {
             return NextResponse.json({ message: "No items provided" }, { status: 400 });
         }
+
+        console.log(`[Onboarding] Creating list "${title}" with ${uniqueItems.length} items for user ${userId}`);
 
         // Create the list
         const list = await prisma.list.create({
@@ -29,8 +35,10 @@ export async function POST(req: NextRequest) {
 
         // Generate ranks for items
         let currentRank = LexoRank.middle();
+        const createdItemIds: string[] = [];
 
-        for (const itemName of items) {
+        for (const itemName of uniqueItems) {
+            // @ts-ignore - itemName is string because we filtered above
             if (!itemName || itemName.trim() === "") continue;
 
             // Create the item
@@ -52,13 +60,16 @@ export async function POST(req: NextRequest) {
                 },
             });
 
+            createdItemIds.push(item.id);
             currentRank = currentRank.genNext();
         }
 
-        // Enrich items in the background (don't wait for this)
-        enrichItemsInBackground(list.id).catch(err =>
-            console.error("Background enrichment error:", err)
-        );
+        // Enrich items synchronously to ensure reliability
+        try {
+            await enrichListItems(list.id);
+        } catch (enrichErr) {
+            console.error("[Onboarding] Enrichment failed but list was created:", enrichErr);
+        }
 
         return NextResponse.json({
             message: "List created successfully",
@@ -71,38 +82,75 @@ export async function POST(req: NextRequest) {
     }
 }
 
-async function enrichItemsInBackground(listId: string) {
-    // Get all items for this list via ItemRank
+async function enrichListItems(listId: string) {
+    console.log(`[Onboarding] Starting enrichment for list: ${listId}`);
+
+    // Get all items for this list
     const itemRanks = await prisma.itemRank.findMany({
         where: { contextId: listId },
         include: { item: true },
+        orderBy: { rank: 'asc' }
     });
 
-    // Enrich each item
-    for (const itemRank of itemRanks) {
-        const item = itemRank.item;
-        try {
-            const enrichResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/enrich`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query: item.title || item.content }),
+    if (itemRanks.length === 0) return;
+
+    const rawTitles = itemRanks.map(ir => ir.item.title || ir.item.content);
+    console.log(`[Onboarding] Calling AI enrichment for items: ${rawTitles.join(", ")}`);
+
+    try {
+        const enriched = await enrichItems(rawTitles);
+        console.log(`[Onboarding] Received ${enriched.length} results from AI`);
+
+        for (let i = 0; i < itemRanks.length; i++) {
+            const item = itemRanks[i].item;
+            const data = enriched[i];
+
+            if (!data) continue;
+
+            console.log(`[Onboarding] Updating item ${item.id} with data for "${data.title}"`);
+
+            await prisma.item.update({
+                where: { id: item.id },
+                data: {
+                    title: data.title || item.title,
+                    content: data.description || item.content,
+                    imageUrl: data.imageUrl,
+                },
             });
 
-            if (enrichResponse.ok) {
-                const enrichData = await enrichResponse.json();
+            // Handle Tags
+            if (data.tags && Array.isArray(data.tags)) {
+                for (const tagName of data.tags) {
+                    try {
+                        const normalizedTagName = tagName.trim().toLowerCase();
+                        const tag = await prisma.tag.upsert({
+                            where: { name: normalizedTagName },
+                            update: {},
+                            create: { name: normalizedTagName }
+                        });
 
-                await prisma.item.update({
-                    where: { id: item.id },
-                    data: {
-                        title: enrichData.title || item.title,
-                        imageUrl: enrichData.imageUrl,
-                        link: enrichData.link,
-                    },
-                });
+                        await prisma.itemTag.upsert({
+                            where: {
+                                itemId_tagId: {
+                                    itemId: item.id,
+                                    tagId: tag.id
+                                }
+                            },
+                            update: {},
+                            create: {
+                                itemId: item.id,
+                                tagId: tag.id
+                            }
+                        });
+                    } catch (e) {
+                        // Ignore individual tag errors
+                    }
+                }
             }
-        } catch (err) {
-            console.error(`Failed to enrich item ${item.id}:`, err);
-            // Continue with other items even if one fails
         }
+        console.log(`[Onboarding] Enrichment complete for list ${listId}`);
+    } catch (error) {
+        console.error(`[Onboarding] Enrichment process error:`, error);
+        throw error;
     }
 }

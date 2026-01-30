@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
                     return null;
                 }
 
-                if (!user.emailVerified) {
+                if (!user.emailVerified && process.env.NODE_ENV !== 'development') {
                     throw new Error("unverified");
                 }
 

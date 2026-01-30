@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const userId = user.id;
 
     try {
-        const { tagName, tagNames } = await req.json();
+        const { tagName, tagNames, title: customTitle } = await req.json();
 
         // Support both single tagName (legacy) and tagNames array
         let tagsToProcess: string[] = [];
@@ -74,11 +74,23 @@ export async function POST(req: Request) {
 
         if (existingList) {
             console.log("[Smart List API] Found existing list:", existingList.id);
+            // If custom title was provided and it differs from existing, update it? 
+            // The requirement implies creating a NEW list or verifying existence. 
+            // If the user CHANGED the name, they probably want that name saved.
+            // If the list already exists, we should probably just return it, 
+            // OR update the title if it doesn't match? 
+            // For now, let's update the title if provided and returns the list.
+            if (customTitle && existingList.title !== customTitle) {
+                await prisma.list.update({
+                    where: { id: existingList.id },
+                    data: { title: customTitle }
+                });
+            }
             return NextResponse.json({ listId: existingList.id });
         }
 
         // 3. Create new Smart List
-        const title = normalizedTags.map(t => `#${t}`).join(" + ");
+        const title = customTitle || normalizedTags.map(t => `#${t}`).join(" + ");
         console.log("[Smart List API] Saving new list:", title);
 
         const newList = await prisma.list.create({

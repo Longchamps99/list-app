@@ -56,10 +56,12 @@ export default function Dashboard() {
     const [listSort, setListSort] = useState<"alpha" | "newest">("newest");
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+    const [isOnboarding, setIsOnboarding] = useState(false);
 
     // Toast State
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const pendingDeletes = useRef<Map<string, { timeout: NodeJS.Timeout, item: Item, index: number }>>(new Map());
+    const processedOnboarding = useRef(false);
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -67,10 +69,71 @@ export default function Dashboard() {
     );
 
     useEffect(() => {
-        Promise.all([fetchItems(), fetchLists()]);
+        const initializeDashboard = async () => {
+            // Check if we have onboarding items waiting
+            const hasOnboarding = typeof window !== 'undefined' && !!localStorage.getItem("tempTop5");
+
+            if (hasOnboarding && !processedOnboarding.current) {
+                setIsOnboarding(true);
+                processedOnboarding.current = true;
+                await checkOnboarding();
+            } else {
+                await Promise.all([fetchItems(), fetchLists()]);
+            }
+        };
+        initializeDashboard();
     }, []);
 
+    const checkOnboarding = async () => {
+        const saved = localStorage.getItem("tempTop5");
+        if (!saved) return;
+
+        // Optimistically remove to prevent double-submission in race conditions
+        localStorage.removeItem("tempTop5");
+
+        try {
+            let items = JSON.parse(saved).filter((item: string) => item && item.trim() !== "");
+            // Deduplicate items
+            items = Array.from(new Set(items));
+
+            if (items.length === 0) return;
+
+            // Create the onboarding list
+            const response = await fetch("/api/lists/onboarding", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items,
+                    title: "My Top 5 Movies"
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                showToast("Your Top 5 list has been saved!", {
+                    label: "View List",
+                    onClick: () => router.push(`/lists/${data.listId}`)
+                });
+                // Refresh lists to show the new one in sidebar
+                await fetchLists();
+                // Refresh items to show them in the main view immediately
+                await fetchItems();
+                setIsOnboarding(false);
+            } else {
+                // If failed, restore the item so they can try again (or we can retry)
+                console.error("Onboarding failed, restoring items");
+                localStorage.setItem("tempTop5", saved);
+                setIsOnboarding(false);
+            }
+        } catch (error) {
+            console.error("Failed to create onboarding list:", error);
+            // Restore on error
+            localStorage.setItem("tempTop5", saved);
+        }
+    };
+
     useEffect(() => {
+        if (isOnboarding) return;
         const handler = setTimeout(() => {
             fetchItems();
             if (search.trim()) {
@@ -314,7 +377,16 @@ export default function Dashboard() {
     );
 
     if (loading && items.length === 0) {
-        return <div className="p-8 text-center text-gray-500">Loading your world...</div>;
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <p className="text-gray-400 font-medium animate-pulse">
+                        {isOnboarding ? "Creating your vault..." : "Loading..."}
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (

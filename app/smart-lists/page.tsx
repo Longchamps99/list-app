@@ -44,6 +44,7 @@ function SmartListContent() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("rank");
+    const [listTitle, setListTitle] = useState("Smart List Preview");
 
     useEffect(() => {
         fetchPreview();
@@ -70,6 +71,11 @@ function SmartListContent() {
                 const data = await res.json();
                 setItems(data.items);
                 setMatchingTags(data.matchingTags);
+
+                // Initialize title based on tags if not successfully set yet
+                if (data.matchingTags.length > 0) {
+                    setListTitle(data.matchingTags.map((t: Tag) => t.name).join(" + "));
+                }
             }
         } catch (e) {
             console.error("Failed to fetch smart list preview", e);
@@ -110,7 +116,10 @@ function SmartListContent() {
             const res = await fetch("/api/lists/smart", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tagNames: matchingTags.map(t => t.name) })
+                body: JSON.stringify({
+                    tagNames: matchingTags.map(t => t.name),
+                    title: listTitle
+                })
             });
 
             if (res.ok) {
@@ -160,7 +169,9 @@ function SmartListContent() {
         <>
             <Header
                 variant="page"
-                title="Smart List Preview"
+                title={listTitle}
+                isEditable={true}
+                onTitleChange={setListTitle}
                 showBack={true}
                 backHref="/dashboard"
             >

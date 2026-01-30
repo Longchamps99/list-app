@@ -98,9 +98,11 @@ const TYPEWRITER_WORDS = [
 ];
 
 import { usePostHog } from "posthog-js/react";
+import { useSession } from "next-auth/react";
 
 export default function LandingPage() {
     const router = useRouter();
+    const { data: session } = useSession();
     const posthog = usePostHog();
     // We store objects with IDs to help DnD tracking
     const [movies, setMovies] = useState<{ id: string; value: string }[]>(
@@ -242,7 +244,12 @@ export default function LandingPage() {
 
         const simpleList = movies.map(m => m.value);
         localStorage.setItem("tempTop5", JSON.stringify(simpleList));
-        router.push("/register");
+
+        if (session) {
+            router.push("/dashboard");
+        } else {
+            router.push("/register");
+        }
     };
 
     return (

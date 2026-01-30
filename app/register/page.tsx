@@ -87,10 +87,13 @@ function RegisterForm() {
                                 <Star className="h-8 w-8 text-indigo-400" />
                             </div>
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-4">Check your email</h1>
+                        <h1 className="text-2xl font-bold text-white mb-4">
+                            {message?.text.includes("Auto-verified") ? "Registration Complete!" : "Check your email"}
+                        </h1>
                         <p className="text-gray-400 mb-8">
-                            We've sent a verification link to <span className="text-white font-semibold">{email}</span>.
-                            Please click the link to verify your account.
+                            {message?.text.includes("Auto-verified")
+                                ? "Since you're developing locally, your account has been automatically verified. You can now log in."
+                                : <>We've sent a verification link to <span className="text-white font-semibold">{email}</span>. Please click the link to verify your account.</>}
                         </p>
                         <Link
                             href="/login"

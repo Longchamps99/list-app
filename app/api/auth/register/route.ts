@@ -49,12 +49,13 @@ export async function POST(req: NextRequest) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user (unverified)
+        // Create user (auto-verify on localhost)
+        const isLocal = process.env.NODE_ENV === 'development';
         const user = await prisma.user.create({
             data: {
                 email,
                 password: hashedPassword,
-                emailVerified: null,
+                emailVerified: isLocal ? new Date() : null,
             },
         });
 
@@ -80,7 +81,12 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json(
-            { message: "Registration successful. Please check your email to verify your account.", userId: user.id },
+            {
+                message: isLocal
+                    ? "Registration successful! (Auto-verified for local development)"
+                    : "Registration successful. Please check your email to verify your account.",
+                userId: user.id
+            },
             { status: 201 }
         );
     } catch (error) {

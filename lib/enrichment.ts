@@ -13,13 +13,15 @@ export async function enrichItems(rawItems: string[]): Promise<EnrichedItem[]> {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
 
     if (!apiKey) {
-        console.error("Missing Gemini API Key");
+        console.error("[Enrichment Lib] CRITICAL: Missing Gemini API Key");
         return rawItems.map(t => ({ title: t, tags: [] }));
     }
+    console.log(`[Enrichment Lib] Initializing with key: ${apiKey.substring(0, 4)}...`);
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
     try {
+        console.log(`[Enrichment Lib] Enriching ${rawItems.length} items...`);
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
@@ -92,7 +94,7 @@ export async function enrichItems(rawItems: string[]): Promise<EnrichedItem[]> {
         return enrichedItems;
 
     } catch (error) {
-        console.error("Enrichment error:", error);
+        console.error("[Enrichment Lib] Enrichment error:", error);
         return rawItems.map(t => ({ title: t, tags: [] }));
     }
 }

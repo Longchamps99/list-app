@@ -13,6 +13,8 @@ interface HeaderProps {
     backHref?: string;
     onMenuClick?: () => void;
     children?: React.ReactNode;
+    isEditable?: boolean;
+    onTitleChange?: (value: string) => void;
 }
 
 export function Header({
@@ -21,7 +23,9 @@ export function Header({
     showBack = false,
     backHref = "/dashboard",
     onMenuClick,
-    children
+    children,
+    isEditable = false,
+    onTitleChange
 }: HeaderProps) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -71,7 +75,17 @@ export function Header({
                     {title && (
                         <>
                             <span className="text-gray-600 hidden sm:inline">/</span>
-                            <h2 className="text-lg font-semibold text-gray-300 hidden sm:block">{title}</h2>
+                            {isEditable ? (
+                                <input
+                                    type="text"
+                                    value={title}
+                                    onChange={(e) => onTitleChange?.(e.target.value)}
+                                    className="text-lg font-semibold text-gray-300 bg-transparent border-0 focus:ring-0 focus:outline-none p-0 w-full min-w-[200px] placeholder-gray-500"
+                                    placeholder="List Name"
+                                />
+                            ) : (
+                                <h2 className="text-lg font-semibold text-gray-300 hidden sm:block">{title}</h2>
+                            )}
                         </>
                     )}
                 </div>
