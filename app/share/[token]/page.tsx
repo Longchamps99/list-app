@@ -120,11 +120,12 @@ export default async function SharePage({ params }: Props) {
 
                 if (!originalList) throw new Error("Original list not found");
 
-                // Clone List
+                // Clone List (forkedFromId tracks provenance)
                 const newList = await prisma.list.create({
                     data: {
                         title: originalList.title,
                         ownerId: userId,
+                        forkedFromId: originalList.id,
                         filterTags: {
                             create: originalList.filterTags.map(t => ({
                                 tag: { connect: { id: t.tagId } }

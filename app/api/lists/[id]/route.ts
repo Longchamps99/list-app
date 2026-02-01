@@ -131,17 +131,35 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const userId = user.id;
 
     try {
+        // Check access: owner or collaborator with WRITE permission
+        const list = await prisma.list.findUnique({
+            where: { id },
+            include: {
+                shares: {
+                    where: { userId }
+                }
+            }
+        });
+
+        if (!list) {
+            return new NextResponse("Not Found", { status: 404 });
+        }
+
+        const isOwner = list.ownerId === userId;
+        const hasWriteAccess = list.shares.some((s: any) => s.permission === 'WRITE');
+
+        if (!isOwner && !hasWriteAccess) {
+            return new NextResponse("Forbidden", { status: 403 });
+        }
+
         const { title } = await req.json();
-        const list = await prisma.list.update({
-            where: {
-                id: id,
-                // @ts-ignore
-                ownerId: userId
-            },
+        const updatedList = await prisma.list.update({
+            where: { id },
             data: { title }
         });
-        return NextResponse.json(list);
+        return NextResponse.json(updatedList);
     } catch (error) {
+        console.error("[List PATCH] Error:", error);
         return new NextResponse("Internal Error", { status: 500 });
     }
 }

@@ -80,7 +80,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     // @ts-ignore
     const userId = user.id;
 
-    const { isChecked, content, title, imageUrl, link, location } = await req.json();
+    const { isChecked, content, title, imageUrl, link, location, status } = await req.json();
 
     // Verify ownership or shared access
     const existingItem = await prisma.item.findUnique({
@@ -111,7 +111,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 ...(title !== undefined && { title }),
                 ...(imageUrl !== undefined && { imageUrl }),
                 ...(link !== undefined && { link }),
-                ...(location !== undefined && { location })
+                ...(location !== undefined && { location }),
+                ...(status !== undefined && { status })
             }
         });
         return NextResponse.json(item);

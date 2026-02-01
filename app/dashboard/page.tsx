@@ -42,6 +42,9 @@ interface ListSummary {
     title: string;
     filterTags: { tag: Tag }[];
     createdAt: string;
+    ownerId: string;
+    owner: { email: string; id: string };
+    shares: { userId: string; permission: string; user: { email: string } }[];
 }
 
 export default function Dashboard() {
@@ -309,6 +312,20 @@ export default function Dashboard() {
 
     const isDraggable = !sort || sort === "rank";
 
+    // Separate lists into owned and shared
+    const myLists = lists.filter(list => list.ownerId === (session?.user as any)?.id);
+    const sharedWithMe = lists.filter(list => list.ownerId !== (session?.user as any)?.id);
+
+    const sortLists = (listsToSort: ListSummary[]) => {
+        return [...listsToSort].sort((a, b) => {
+            if (listSort === "alpha") {
+                return a.title.localeCompare(b.title);
+            } else {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+        });
+    };
+
     const SidebarContent = (
         <div className="p-6">
             {/* Search Bar in Sidebar */}
@@ -329,8 +346,9 @@ export default function Dashboard() {
                 </div>
             </div>
 
+            {/* My Lists Section */}
             <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-white uppercase tracking-wider text-xs opacity-50">My Smart Lists</h2>
+                <h2 className="font-bold text-white uppercase tracking-wider text-xs opacity-50">My Lists</h2>
                 <button
                     onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
                     className="p-1 text-gray-400 hover:text-indigo-400 rounded transition-colors"
@@ -349,30 +367,52 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            <ul className="space-y-1">
-                {[...lists]
-                    .sort((a, b) => {
-                        if (listSort === "alpha") {
-                            return a.title.localeCompare(b.title);
-                        } else {
-                            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                        }
-                    })
-                    .map(list => (
-                        <li key={list.id}>
-                            <Link
-                                href={`/lists/${list.id}`}
-                                className="block px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 hover:text-indigo-400 transition truncate border border-transparent hover:border-white/10"
-                                onClick={() => setIsMobileSidebarOpen(false)}
-                            >
-                                {list.title}
-                            </Link>
-                        </li>
-                    ))}
-                {lists.length === 0 && (
+            <ul className="space-y-1 mb-8">
+                {sortLists(myLists).map(list => (
+                    <li key={list.id}>
+                        <Link
+                            href={`/lists/${list.id}`}
+                            className="block px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 hover:text-indigo-400 transition truncate border border-transparent hover:border-white/10"
+                            onClick={() => setIsMobileSidebarOpen(false)}
+                        >
+                            {list.title}
+                        </Link>
+                    </li>
+                ))}
+                {myLists.length === 0 && (
                     <p className="text-gray-500 text-sm px-3 py-2 italic">Save a tag search to create your first Smart List</p>
                 )}
             </ul>
+
+            {/* Shared with Me Section */}
+            {sharedWithMe.length > 0 && (
+                <>
+                    <div className="flex items-center mb-4">
+                        <h2 className="font-bold text-white uppercase tracking-wider text-xs opacity-50">Shared with Me</h2>
+                        <svg className="ml-2 h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+
+                    <ul className="space-y-1">
+                        {sortLists(sharedWithMe).map(list => (
+                            <li key={list.id}>
+                                <Link
+                                    href={`/lists/${list.id}`}
+                                    className="block px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 hover:text-indigo-400 transition border border-transparent hover:border-white/10 group"
+                                    onClick={() => setIsMobileSidebarOpen(false)}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className="truncate">{list.title}</span>
+                                        <span className="flex-shrink-0 px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 text-[10px] rounded-full font-medium">Collab</span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 truncate">by {list.owner.email}</p>
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </>
+            )}
         </div>
     );
 

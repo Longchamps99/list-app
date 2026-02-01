@@ -86,6 +86,11 @@ interface List {
     items: Item[];
     filterTags: { tag: Tag }[];
     ownerId: string;
+    shares: {
+        userId: string;
+        permission: string;
+        user: { email: string };
+    }[];
 }
 
 export default function ListPage() {
@@ -104,6 +109,12 @@ export default function ListPage() {
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
         useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
     );
+
+    // Invite Collaborator state
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [invitePermission, setInvitePermission] = useState<'READ' | 'WRITE'>('WRITE');
+    const [inviting, setInviting] = useState(false);
 
     useEffect(() => {
         if (id) fetchList();
@@ -238,24 +249,39 @@ export default function ListPage() {
 
     const [tagInputOpen, setTagInputOpen] = useState<string | null>(null);
 
-    const shareList = async () => {
-        const email = prompt("Enter email to share with:");
-        if (!email) return;
+    const inviteCollaborator = async () => {
+        if (!inviteEmail.trim()) return;
+        setInviting(true);
 
         try {
-            const res = await fetch(`/api/lists/${id}/share`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email })
+            const res = await fetch(`/api/lists/${id}/invite`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: inviteEmail, permission: invitePermission })
             });
+
             if (res.ok) {
-                alert(`Shared with ${email}`);
+                setInviteEmail('');
+                fetchList(); // Refresh to show new collaborator
             } else {
                 const txt = await res.text();
                 alert(`Failed: ${txt}`);
             }
         } catch (e) {
-            alert("Error sharing");
+            console.error('Error inviting', e);
+        } finally {
+            setInviting(false);
+        }
+    };
+
+    const removeCollaborator = async (userId: string) => {
+        try {
+            await fetch(`/api/lists/${id}/invite?userId=${userId}`, {
+                method: 'DELETE'
+            });
+            fetchList();
+        } catch (e) {
+            console.error('Error removing collaborator', e);
         }
     };
 
@@ -353,6 +379,17 @@ export default function ListPage() {
             >
                 {/* Page-specific actions in header */}
                 <div className="flex items-center gap-3 ml-auto">
+                    {/* Invite Collaborators Button */}
+                    <button
+                        onClick={() => setShowInviteModal(true)}
+                        className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 rounded-md transition-colors border-0 shadow-sm font-medium flex items-center gap-2"
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM12.75 12a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                        Invite
+                    </button>
+
                     {/* Blue Share Button */}
                     <ShareButton
                         type="LIST"
@@ -661,6 +698,98 @@ export default function ListPage() {
                     </DndContext>
                 </main>
             </div>
+
+            {/* Invite Collaborator Modal */}
+            {showInviteModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                        <div className="p-4 border-b flex justify-between items-center">
+                            <h2 className="text-lg font-bold text-gray-900">Invite Collaborators</h2>
+                            <button
+                                onClick={() => setShowInviteModal(false)}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                            >
+                                <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            {/* Invite Form */}
+                            <div className="space-y-4 mb-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input
+                                        type="email"
+                                        placeholder="collaborator@example.com"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 text-gray-900"
+                                        value={inviteEmail}
+                                        onChange={(e) => setInviteEmail(e.target.value)}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Permission</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setInvitePermission('WRITE')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'WRITE'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            Can Edit
+                                        </button>
+                                        <button
+                                            onClick={() => setInvitePermission('READ')}
+                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'READ'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            View Only
+                                        </button>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={inviteCollaborator}
+                                    disabled={inviting || !inviteEmail.trim()}
+                                    className="w-full py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                >
+                                    {inviting ? 'Inviting...' : 'Send Invite'}
+                                </button>
+                            </div>
+
+                            {/* Current Collaborators */}
+                            {list.shares && list.shares.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-medium text-gray-700 mb-2">Current Collaborators</h3>
+                                    <div className="space-y-2">
+                                        {list.shares.map((share) => (
+                                            <div key={share.userId} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">{share.user.email}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {share.permission === 'WRITE' ? 'Can Edit' : 'View Only'}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => removeCollaborator(share.userId)}
+                                                    className="text-red-600 hover:text-red-800 p-1"
+                                                    title="Remove collaborator"
+                                                >
+                                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

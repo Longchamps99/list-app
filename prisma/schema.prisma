@@ -29,14 +29,17 @@ model User {
 }
 
 model List {
-  id         String          @id @default(cuid())
-  title      String
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  ownerId    String
-  owner      User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  filterTags ListFilterTag[]
-  shares     SharedList[]
+  id           String          @id @default(cuid())
+  title        String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  ownerId      String
+  forkedFromId String?
+  owner        User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  forkedFrom   List?           @relation("ListForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
+  forks        List[]          @relation("ListForks")
+  filterTags   ListFilterTag[]
+  shares       SharedList[]
 }
 
 model Item {
@@ -47,6 +50,7 @@ model Item {
   imageUrl  String?
   link      String?
   location  String?
+  status    String?      // 'EXPERIENCED' or 'WANT_TO_EXPERIENCE'
   createdAt DateTime     @default(now())
   ownerId   String
   owner     User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -86,6 +90,7 @@ model SharedList {
   userId     String
   listId     String
   sharedById String?
+  permission String  @default("WRITE") // 'READ' or 'WRITE'
   list       List    @relation(fields: [listId], references: [id], onDelete: Cascade)
   sharedBy   User?   @relation("ListSender", fields: [sharedById], references: [id])
   user       User    @relation("ListRecipient", fields: [userId], references: [id], onDelete: Cascade)
