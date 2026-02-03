@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "../../components/Header";
@@ -27,7 +27,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export default function NewItemPage() {
+function NewItemContent() {
     const router = useRouter();
 
     // App State
@@ -605,6 +605,18 @@ export default function NewItemPage() {
                 </AnimatePresence>
             </main>
         </div>
+    );
+}
+
+export default function NewItemPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--swiss-black)]" />
+            </div>
+        }>
+            <NewItemContent />
+        </Suspense>
     );
 }
 
