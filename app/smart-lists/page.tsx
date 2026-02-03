@@ -16,6 +16,18 @@ import {
     MouseSensor
 } from "@dnd-kit/core";
 import {
+    Menu,
+    Plus,
+    Search,
+    LayoutGrid,
+    List,
+    ChevronDown,
+    Share2,
+    Trash2,
+    Pencil,
+    Check
+} from "lucide-react";
+import {
     arrayMove,
     SortableContext,
     sortableKeyboardCoordinates,
@@ -241,8 +253,8 @@ function SmartListContent() {
             });
 
             if (res.ok) {
-                const { listId } = await res.json();
-                router.push(`/lists/${listId}`);
+                // Return to dashboard as requested
+                router.push("/dashboard");
                 router.refresh();
             } else {
                 const errorData = await res.json().catch(() => ({}));
@@ -253,6 +265,30 @@ function SmartListContent() {
             alert(`Error saving list: ${e.message}`);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleShare = async () => {
+        const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+        if (!shareUrl) return;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Smart List: ${listTitle}`,
+                    text: `Check out this smart list: ${listTitle}`,
+                    url: shareUrl,
+                });
+            } catch (e) {
+                console.error("Share failed", e);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareUrl);
+                alert("Link copied to clipboard!");
+            } catch (e) {
+                console.error("Clipboard failed", e);
+            }
         }
     };
 
@@ -290,143 +326,148 @@ function SmartListContent() {
         <>
             <Header
                 variant="page"
-                title={listTitle}
-                isEditable={true}
-                onTitleChange={setListTitle}
                 showBack={true}
                 backHref="/dashboard"
             >
                 {/* Page-specific actions in header */}
                 <div className="flex items-center gap-3 ml-auto">
                     {matchingTags.length > 0 && (
-                        <button
-                            onClick={saveList}
-                            disabled={saving}
-                            className="px-6 py-2.5 bg-[var(--swiss-black)] text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-all font-semibold text-sm disabled:opacity-50"
-                        >
-                            {saving ? "Saving..." : "Save List"}
-                        </button>
+                        <>
+                            <button
+                                onClick={handleShare}
+                                className="px-6 py-2.5 text-white rounded-full transition-all font-semibold text-sm flex items-center gap-2"
+                                style={{ backgroundColor: '#374151', color: '#ffffff' }}
+                            >
+                                <Share2 className="h-4 w-4" />
+                                Share
+                            </button>
+                            <button
+                                onClick={saveList}
+                                disabled={saving}
+                                className="px-6 py-2.5 text-white rounded-full transition-all font-semibold text-sm flex items-center gap-2 disabled:opacity-50"
+                                style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                            >
+                                {saving ? (
+                                    "Saving..."
+                                ) : (
+                                    <>
+                                        <Check className="h-4 w-4" />
+                                        Save
+                                    </>
+                                )}
+                            </button>
+                        </>
                     )}
                 </div>
             </Header>
             <div className="min-h-screen bg-white flex flex-col">
-                {/* Tag Filters Bar */}
-                <div className="bg-[var(--swiss-off-white)] border-b border-[var(--swiss-border)]">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2 items-center">
-                        <span className="text-sm text-[var(--swiss-text-muted)] mr-2">Filters:</span>
-                        {matchingTags.map(tag => (
-                            <span key={tag.id} className="bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
-                                #{tag.name}
-                                <button
-                                    onClick={() => removeTagFilter(tag.name)}
-                                    className="hover:text-[var(--swiss-green)] font-bold ml-1 w-4 h-4 flex items-center justify-center rounded-full hover:bg-[var(--swiss-green)]/20"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-
-                        <form onSubmit={addTagFilter} className="relative">
+                {/* Large Title Header */}
+                <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+                    <div className="flex flex-col gap-2 items-start">
+                        <div className="flex items-center gap-2 flex-wrap text-4xl md:text-5xl font-bold tracking-tight" style={{ fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif' }}>
+                            <span style={{ color: '#9CA3AF', whiteSpace: 'nowrap' }}>Smart List Preview:&nbsp;</span>
                             <div className="flex items-center">
                                 <input
                                     type="text"
-                                    placeholder="Add tag filter..."
-                                    className="text-sm rounded-l-md bg-white border-[var(--swiss-border)] focus:border-[var(--swiss-black)] focus:ring-[var(--swiss-black)] p-1.5 border w-32 md:w-48 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
-                                    value={newTagInput}
-                                    onChange={(e) => setNewTagInput(e.target.value)}
-                                    onFocus={() => setShowDropdown(true)}
-                                    onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                                    value={listTitle}
+                                    onChange={(e) => setListTitle(e.target.value)}
+                                    className="bg-transparent border-0 p-0 focus:ring-0 text-black placeholder-gray-300 font-bold text-inherit tracking-tight"
+                                    style={{
+                                        width: `${Math.max(listTitle.length || 1, 1) + 1}ch`,
+                                        minWidth: '100px',
+                                        fontSize: 'inherit',
+                                        lineHeight: 'inherit'
+                                    }}
                                 />
-                                <button
-                                    type="submit"
-                                    className="bg-[var(--swiss-black)] text-white px-3 py-1.5 rounded-r-md hover:bg-[var(--swiss-accent-hover)] text-sm border border-l-0 border-[var(--swiss-border)]"
-                                >
-                                    +
-                                </button>
+                                <Pencil className="h-8 w-8 text-gray-300 ml-2" aria-hidden="true" />
                             </div>
-
-                            {/* Autocomplete Dropdown */}
-                            {showDropdown && (
-                                <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-white border border-[var(--swiss-border)] rounded-md shadow-lg z-50">
-                                    {allTags
-                                        .filter(tag => {
-                                            const currentTags = tagsParam ? tagsParam.split(",") : [];
-                                            if (currentTags.includes(tag.name)) return false;
-                                            if (newTagInput.trim()) {
-                                                return tag.name.toLowerCase().includes(newTagInput.toLowerCase());
-                                            }
-                                            return true;
-                                        })
-                                        .map(tag => (
-                                            <button
-                                                key={tag.id}
-                                                type="button"
-                                                className="w-full text-left px-3 py-2 text-sm text-[var(--swiss-text)] hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] transition"
-                                                onMouseDown={(e) => {
-                                                    e.preventDefault();
-                                                    setNewTagInput(tag.name);
-                                                    const currentTags = tagsParam ? tagsParam.split(",") : [];
-                                                    if (!currentTags.includes(tag.name)) {
-                                                        const newTags = [...currentTags, tag.name];
-                                                        router.push(`/smart-lists?tags=${newTags.join(",")}`);
-                                                    }
-                                                    setNewTagInput("");
-                                                    setShowDropdown(false);
-                                                }}
-                                            >
-                                                #{tag.name}
-                                            </button>
-                                        ))
-                                    }
-                                    {allTags.filter(tag => {
-                                        const currentTags = tagsParam ? tagsParam.split(",") : [];
-                                        if (currentTags.includes(tag.name)) return false;
-                                        if (newTagInput.trim()) {
-                                            return tag.name.toLowerCase().includes(newTagInput.toLowerCase());
-                                        }
-                                        return true;
-                                    }).length === 0 && (
-                                            <div className="px-3 py-2 text-sm text-[var(--swiss-text-muted)]">
-                                                {newTagInput.trim() ? "No matching tags" : "No tags available"}
-                                            </div>
-                                        )}
-                                </div>
-                            )}
-                        </form>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            Changes auto-saved to local session
+                        </div>
                     </div>
                 </div>
+
+
                 {/* Content */}
                 <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
                     {/* Controls Bar */}
-                    <div className="mb-6 flex items-center justify-between">
-                        {/* Search Bar */}
-                        <div className="flex-1 max-w-2xl relative mr-6">
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
+                    <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[var(--swiss-border)] pb-6">
+                        {/* Left: Filters */}
+                        <div className="flex flex-wrap gap-2 items-center">
+                            <span className="text-sm font-bold uppercase tracking-wider text-[var(--swiss-text-muted)] mr-2">Filters:</span>
+                            {matchingTags.map(tag => (
+                                <span key={tag.id} className="bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                                    #{tag.name}
+                                    <button
+                                        onClick={() => removeTagFilter(tag.name)}
+                                        className="hover:opacity-60 font-bold ml-1 w-4 h-4 flex items-center justify-center"
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            ))}
+
+                            <form onSubmit={addTagFilter} className="relative">
+                                <div className="flex items-center">
+                                    <input
+                                        type="text"
+                                        placeholder="Add filter..."
+                                        className="text-sm rounded-l-md bg-white border-[var(--swiss-border)] focus:border-[var(--swiss-black)] focus:ring-0 p-1.5 border w-32 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
+                                        value={newTagInput}
+                                        onChange={(e) => setNewTagInput(e.target.value)}
+                                        onFocus={() => setShowDropdown(true)}
+                                        onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="bg-[var(--swiss-black)] text-white px-3 py-1.5 rounded-r-md hover:bg-gray-800 text-sm border border-l-0 border-[var(--swiss-border)]"
+                                    >
+                                        +
+                                    </button>
                                 </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search items..."
-                                    className="w-full pl-10 pr-20 py-2.5 bg-white border border-[var(--swiss-border)] rounded-lg focus:border-[var(--swiss-black)] focus:outline-none focus:ring-2 focus:ring-[var(--swiss-black)]/20 transition-all text-sm text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                                <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
-                                        ⌘K
-                                    </kbd>
-                                </div>
-                            </div>
+
+                                {showDropdown && (
+                                    <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-white border border-[var(--swiss-border)] rounded-md shadow-lg z-50">
+                                        {allTags
+                                            .filter(tag => {
+                                                const currentTags = tagsParam ? tagsParam.split(",") : [];
+                                                if (currentTags.includes(tag.name)) return false;
+                                                if (newTagInput.trim()) return tag.name.toLowerCase().includes(newTagInput.toLowerCase());
+                                                return true;
+                                            })
+                                            .map(tag => (
+                                                <button
+                                                    key={tag.id}
+                                                    type="button"
+                                                    className="w-full text-left px-3 py-2 text-sm text-[var(--swiss-text)] hover:bg-[var(--swiss-off-white)] transition"
+                                                    onMouseDown={(e) => {
+                                                        e.preventDefault();
+                                                        setNewTagInput(tag.name);
+                                                        const currentTags = tagsParam ? tagsParam.split(",") : [];
+                                                        if (!currentTags.includes(tag.name)) {
+                                                            const newTags = [...currentTags, tag.name];
+                                                            router.push(`/smart-lists?tags=${newTags.join(",")}`);
+                                                        }
+                                                        setNewTagInput("");
+                                                        setShowDropdown(false);
+                                                    }}
+                                                >
+                                                    #{tag.name}
+                                                </button>
+                                            ))
+                                        }
+                                    </div>
+                                )}
+                            </form>
                         </div>
 
-                        {/* View and Sort Controls */}
+                        {/* Right: View and Sort Controls */}
                         <div className="flex items-center gap-3">
                             {/* Add New Item Button */}
                             <Link
-                                href="/items/new"
+                                href={`/items/new?source=smart-list&tags=${encodeURIComponent(tagsParam || "")}`}
                                 className="flex items-center gap-2 px-6 py-2.5 bg-[var(--swiss-black)] !text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-all font-bold text-sm"
                             >
                                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -528,8 +569,8 @@ function SmartListContent() {
                                                     {/* Content */}
                                                     <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--swiss-black)] text-white flex items-center justify-center font-bold text-sm leading-none">
-                                                                #{index + 1}
+                                                            <div className="flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
+                                                                <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
                                                             </div>
                                                             <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
                                                                 <h3 className="font-bold text-xl text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
@@ -632,8 +673,8 @@ function SmartListContent() {
                                                         </div>
 
                                                         {/* Rank Badge */}
-                                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--swiss-black)] text-white flex items-center justify-center font-bold text-xs leading-none">
-                                                            #{index + 1}
+                                                        <div className="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
+                                                            <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
                                                         </div>
 
                                                         {/* Title */}

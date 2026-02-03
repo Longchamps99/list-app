@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Header } from "../../components/Header";
 import posthog from "posthog-js";
@@ -41,7 +41,23 @@ export default function NewItemPage() {
     const [imageUrl, setImageUrl] = useState("");
     const [itemLink, setItemLink] = useState("");
     const [location, setLocation] = useState("");
+
     const [tags, setTags] = useState<string[]>([]);
+
+    // Context Params
+    const searchParams = useSearchParams();
+    const source = searchParams.get("source");
+    const sourceTagsParam = searchParams.get("tags");
+
+    // Initialize tags from URL if coming from Smart List
+    useEffect(() => {
+        if (source === "smart-list" && sourceTagsParam) {
+            const initialTags = sourceTagsParam.split(",").map(t => t.trim().toLowerCase()).filter(Boolean);
+            if (initialTags.length > 0) {
+                setTags(prev => Array.from(new Set([...prev, ...initialTags])));
+            }
+        }
+    }, [source, sourceTagsParam]);
 
     // UI State
     const [isEnriching, setIsEnriching] = useState(false);
@@ -472,39 +488,71 @@ export default function NewItemPage() {
                                 </div>
 
                                 {/* Footer bar */}
-                                <div className="p-6 bg-[var(--swiss-off-white)] border-t border-[var(--swiss-border)] flex justify-between items-center sm:px-10">
-                                    <div className="flex items-center gap-3">
+                                <div className="p-6 bg-[var(--swiss-off-white)] border-t border-[var(--swiss-border)] flex flex-col sm:flex-row gap-4 justify-between items-center sm:px-10">
+                                    <div className="flex items-center gap-3 w-full sm:w-auto">
                                         <div className={`h-1.5 w-1.5 rounded-full ${isSaving ? 'bg-[var(--swiss-text-muted)] animate-pulse' : 'bg-[var(--swiss-green)]'}`} />
                                         <span className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest leading-none">
                                             {isSaving ? 'Saving Changes...' : 'All changes saved'}
                                         </span>
                                     </div>
-                                    <button
-                                        onClick={() => router.push('/dashboard')}
-                                        className={primaryButtonClass}
-                                    >
-                                        Done
-                                    </button>
+
+                                    {source === "smart-list" ? (
+                                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                                            <button
+                                                onClick={() => {
+                                                    setHasSearched(false);
+                                                    setTitle("");
+                                                    setSavedItemId(null);
+                                                    // Reset but keep source tags
+                                                    const initialTags = sourceTagsParam ? sourceTagsParam.split(",").map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+                                                    setTags(initialTags);
+                                                    setImageUrl("");
+                                                    setDescription("");
+                                                    setItemLink("");
+                                                    setLocation("");
+                                                }}
+                                                className={secondaryButtonClass}
+                                            >
+                                                + Add Another Item
+                                            </button>
+                                            <button
+                                                onClick={() => router.push(`/smart-lists?tags=${encodeURIComponent(sourceTagsParam || "")}`)}
+                                                className={primaryButtonClass}
+                                            >
+                                                Return to List
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => router.push('/dashboard')}
+                                            className={primaryButtonClass}
+                                        >
+                                            Done
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="mt-8 text-center">
-                                <button
-                                    onClick={() => {
-                                        setHasSearched(false);
-                                        setTitle("");
-                                        setSavedItemId(null);
-                                        setTags([]);
-                                        setImageUrl("");
-                                        setDescription("");
-                                        setItemLink("");
-                                        setLocation("");
-                                    }}
-                                    className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2"
-                                >
-                                    + Add another item
-                                </button>
-                            </div>
+                            {/* Only show the disconnected 'Add another' link if NOT in smart list mode (since we have a button above) */}
+                            {source !== "smart-list" && (
+                                <div className="mt-8 text-center">
+                                    <button
+                                        onClick={() => {
+                                            setHasSearched(false);
+                                            setTitle("");
+                                            setSavedItemId(null);
+                                            setTags([]);
+                                            setImageUrl("");
+                                            setDescription("");
+                                            setItemLink("");
+                                            setLocation("");
+                                        }}
+                                        className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2"
+                                    >
+                                        + Add another item
+                                    </button>
+                                </div>
+                            )}
                         </motion.div>
                     )}
                 </AnimatePresence>

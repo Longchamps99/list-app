@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Sparkles, ChevronRight, Star, GripVertical } from "lucide-react";
+import { Users, Sparkles, ChevronRight, Star, GripVertical, Heart, MessageCircle, Shuffle } from "lucide-react";
 import {
     DndContext,
     closestCenter,
@@ -25,7 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { usePostHog } from "posthog-js/react";
 import { useSession } from "next-auth/react";
 
-// --- Sortable Item Component (Swiss Design) ---
+// --- Sortable Item Component (Dashboard Tile Style) ---
 function SortableMovieItem({
     id,
     index,
@@ -60,43 +60,102 @@ function SortableMovieItem({
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="group relative mb-3">
-            <div className={`flex items-center gap-3 bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded-lg p-1 transition-all ${isDragging ? 'shadow-lg border-[var(--swiss-black)] scale-[1.02]' : 'hover:border-[var(--swiss-text-muted)]'}`}>
-                {/* Drag Handle & Rank */}
+        <div ref={setNodeRef} style={style} className="group">
+            <div className={`flex items-center gap-4 bg-white border border-[var(--swiss-border)] rounded-lg p-3 transition-all ${isDragging ? 'shadow-xl border-[var(--swiss-black)] scale-[1.02]' : 'hover:border-[var(--swiss-text-muted)]'}`}>
+                {/* Rank Number - Large and Prominent */}
                 <div
                     {...attributes}
                     {...listeners}
-                    className="flex-shrink-0 w-10 h-10 rounded-md bg-[var(--swiss-black)] flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors"
+                    className="flex-shrink-0 w-12 h-12 bg-[var(--swiss-black)] text-white flex items-center justify-center cursor-grab active:cursor-grabbing rounded-md"
                 >
-                    <div className="flex flex-col items-center justify-center">
-                        <span className="text-xs font-bold text-white">#{index + 1}</span>
-                        <GripVertical className="h-3 w-3 text-white/50 opacity-0 group-hover:opacity-100 transition-opacity absolute mt-4" />
-                    </div>
+                    <span className="text-xl font-bold">{String(index + 1).padStart(2, '0')}</span>
+                </div>
+
+                {/* Thumbnail Placeholder */}
+                <div className="w-12 h-12 bg-[var(--swiss-off-white)] rounded flex-shrink-0 flex items-center justify-center">
+                    {value ? (
+                        <span className="text-xs text-[var(--swiss-text-muted)]">🎬</span>
+                    ) : (
+                        <span className="text-[10px] text-[var(--swiss-text-muted)]">IMG</span>
+                    )}
                 </div>
 
                 {/* Input */}
-                <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    placeholder={`Item #${index + 1}...`}
-                    className="flex-1 bg-transparent border-0 ring-0 px-2 py-2 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)] focus:outline-none focus:ring-0 text-base font-medium"
-                />
+                <div className="flex-1 min-w-0">
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        onFocus={onFocus}
+                        onBlur={onBlur}
+                        placeholder={`Movie #${index + 1}...`}
+                        className="w-full bg-transparent border-0 ring-0 p-0 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)] focus:outline-none focus:ring-0 text-base font-semibold"
+                    />
+                    <p className="text-xs text-[var(--swiss-text-muted)] truncate mt-0.5">
+                        {value ? "Tap to edit • Drag to reorder" : "Type to add..."}
+                    </p>
+                </div>
+
+                {/* Tag Placeholder */}
+                {value && (
+                    <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 bg-[var(--swiss-green-light)] text-[var(--swiss-green)] rounded-full border border-[var(--swiss-green)]/30 font-medium">
+                        #movie
+                    </span>
+                )}
             </div>
         </div>
     );
 }
 
-const TYPEWRITER_WORDS = [
-    "Movies",
-    "Books",
-    "Hotels",
-    "Songs",
-    "Places",
-    "Anything"
-];
+// --- Example List Card Component ---
+function ExampleListCard({
+    title,
+    items,
+    likes,
+    comments
+}: {
+    title: string;
+    items: string[];
+    likes?: number;
+    comments?: number;
+}) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white border border-[var(--swiss-border)] rounded-xl p-6 hover:border-[var(--swiss-black)] transition-all"
+        >
+            <h4 className="text-lg font-bold mb-4 text-[var(--swiss-black)]">{title}</h4>
+            <div className="space-y-2 mb-4">
+                {items.map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                        <span className="text-sm font-bold text-[var(--swiss-text-muted)] w-6">{String(i + 1).padStart(2, '0')}</span>
+                        <span className="text-sm font-medium text-[var(--swiss-black)]">{item}</span>
+                    </div>
+                ))}
+            </div>
+            <div className="flex items-center gap-4 pt-3 border-t border-[var(--swiss-border)]">
+                {likes !== undefined && (
+                    <button className="flex items-center gap-1 text-xs text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors">
+                        <Heart className="h-3.5 w-3.5" />
+                        <span>{likes}</span>
+                    </button>
+                )}
+                {comments !== undefined && (
+                    <button className="flex items-center gap-1 text-xs text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>{comments}</span>
+                    </button>
+                )}
+                <button className="flex items-center gap-1 text-xs text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors ml-auto">
+                    <Shuffle className="h-3.5 w-3.5" />
+                    <span>Re-Rank</span>
+                </button>
+            </div>
+        </motion.div>
+    );
+}
 
 export default function LandingPage() {
     const router = useRouter();
@@ -106,13 +165,11 @@ export default function LandingPage() {
         Array(5).fill(null).map((_, i) => ({ id: `item-${i}`, value: "" }))
     );
     const [focusedId, setFocusedId] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
 
-    // Animation State
-    const [displayText, setDisplayText] = useState("");
-    const [wordIndex, setWordIndex] = useState(0);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [showForm, setShowForm] = useState(false);
-    const [animationComplete, setAnimationComplete] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Sensors for DnD
     const sensors = useSensors(
@@ -131,23 +188,22 @@ export default function LandingPage() {
                 if (Array.isArray(parsed) && parsed.length > 0) {
                     if (typeof parsed[0] === 'string') {
                         setMovies(parsed.map((v: string, i: number) => ({ id: `saved-${i}`, value: v })));
-                        if (parsed.some((s: string) => s.trim() !== "")) {
-                            setAnimationComplete(true);
-                            setDisplayText("Anything");
-                            setShowForm(true);
-                        }
                     } else {
                         setMovies(parsed);
-                        if (parsed.some((m: any) => m.value.trim() !== "")) {
-                            setAnimationComplete(true);
-                            setDisplayText("Anything");
-                            setShowForm(true);
-                        }
                     }
                 }
             } catch (e) {
                 console.error("Failed to parse", e);
             }
+        } else {
+            // Pre-fill with examples
+            setMovies([
+                { id: 'item-0', value: 'The Godfather' },
+                { id: 'item-1', value: 'Pulp Fiction' },
+                { id: 'item-2', value: '' },
+                { id: 'item-3', value: '' },
+                { id: 'item-4', value: '' },
+            ]);
         }
     }, []);
 
@@ -155,50 +211,6 @@ export default function LandingPage() {
         const simpleList = movies.map(m => m.value);
         localStorage.setItem("tempTop5", JSON.stringify(simpleList));
     }, [movies]);
-
-    // Typewriter Effect
-    useEffect(() => {
-        if (animationComplete) return;
-
-        const currentWord = TYPEWRITER_WORDS[wordIndex];
-        const typeSpeed = isDeleting ? 50 : 100;
-
-        const timer = setTimeout(() => {
-            if (!isDeleting) {
-                setDisplayText(currentWord.substring(0, displayText.length + 1));
-
-                if (displayText.length === currentWord.length) {
-                    if (wordIndex === TYPEWRITER_WORDS.length - 1) {
-                        setAnimationComplete(true);
-                        setTimeout(() => setShowForm(true), 500);
-
-                        setMovies(prev => {
-                            const hasContent = prev.some(m => m.value.trim() !== "");
-                            if (!hasContent) {
-                                const newMovies = [...prev];
-                                newMovies[0].value = "The Godfather";
-                                newMovies[1].value = "The Shawshank Redemption";
-                                return newMovies;
-                            }
-                            return prev;
-                        });
-                        return;
-                    }
-
-                    setTimeout(() => setIsDeleting(true), 1200);
-                }
-            } else {
-                setDisplayText(currentWord.substring(0, displayText.length - 1));
-
-                if (displayText.length === 0) {
-                    setIsDeleting(false);
-                    setWordIndex(prev => prev + 1);
-                }
-            }
-        }, typeSpeed);
-
-        return () => clearTimeout(timer);
-    }, [displayText, isDeleting, wordIndex, animationComplete]);
 
     // Handlers
     const handleDragEnd = (event: DragEndEvent) => {
@@ -234,7 +246,7 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-[var(--swiss-black)] overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-white text-[var(--swiss-black)] overflow-x-hidden flex flex-col">
             {/* Navigation */}
             <nav className="relative z-10 border-b border-[var(--swiss-border)]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -245,7 +257,7 @@ export default function LandingPage() {
                                 alt="Vaulted Logo"
                                 className="h-8 w-8 object-contain rounded-md"
                             />
-                            <span className="text-2xl font-bold text-[var(--swiss-black)]">
+                            <span className="text-2xl font-bold text-[var(--swiss-black)]" style={{ letterSpacing: '-0.03em' }}>
                                 Vaulted
                             </span>
                         </div>
@@ -258,7 +270,8 @@ export default function LandingPage() {
                             </Link>
                             <Link
                                 href="/register"
-                                className="px-6 py-2 bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] text-white rounded-lg text-sm font-semibold transition-all hover:-translate-y-0.5"
+                                className="px-6 py-2 rounded-lg text-sm font-semibold transition-all hover:-translate-y-0.5"
+                                style={{ backgroundColor: '#000000', color: '#ffffff' }}
                             >
                                 Get Started
                             </Link>
@@ -267,160 +280,185 @@ export default function LandingPage() {
                 </div>
             </nav>
 
-            {/* Hero Section */}
-            <div className="flex-1 flex flex-col justify-center relative z-10">
-                <section className="px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            {/* SECTION 01 — HERO */}
+            <section className="relative z-10 py-16 lg:py-24 px-4 sm:px-6 lg:px-8 border-b border-[var(--swiss-border)]">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+                        {/* Left Column - Copy */}
+                        <div>
+                            <h1
+                                className="font-bold leading-[0.6] mb-8"
+                                style={{
+                                    fontSize: 'clamp(5rem, 10vw, 20rem)',
+                                    letterSpacing: '-0.06em',
+                                    textIndent: '-0.02em'
+                                }}
+                            >
+                                Your Taste.<br />
+                                <span className="text-[var(--swiss-text-muted)]">Cataloged.</span>
+                            </h1>
+                            <p className="text-xl lg:text-3xl text-[var(--swiss-text-secondary)] mb-10 leading-relaxed max-w-2xl" style={{ letterSpacing: '-0.01em' }}>
+                                The definitive platform to create, share, and discover personalized ranked lists. From obscure cinema to Michelin cuisine.
+                            </p>
 
-                            {/* Left Column - Copy */}
-                            <div className="text-center lg:text-left">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--swiss-green-light)] border border-[var(--swiss-green)]/30 rounded-full mb-6"
-                                >
-                                    <Sparkles className="h-4 w-4 text-[var(--swiss-green)]" />
-                                    <span className="text-sm text-[var(--swiss-green)] font-medium">Curate Your Legacy</span>
-                                </motion.div>
+                            <ul className="space-y-3 mb-10 text-[var(--swiss-text-secondary)]">
+                                <li className="flex items-start gap-3">
+                                    <span className="text-[var(--swiss-green)] font-bold">→</span>
+                                    <span>Build definitive top 10s for any category.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-[var(--swiss-green)] font-bold">→</span>
+                                    <span>Compare taste profiles with friends.</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                    <span className="text-[var(--swiss-green)] font-bold">→</span>
+                                    <span>Export your lists as beautiful image assets.</span>
+                                </li>
+                            </ul>
 
-                                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 leading-tight min-h-[160px] lg:min-h-[220px]">
-                                    My Top 5
-                                    <span className="block text-[var(--swiss-green)] leading-relaxed pb-2">
-                                        {displayText}
-                                        <motion.span
-                                            animate={{ opacity: [1, 0] }}
-                                            transition={{ repeat: Infinity, duration: 0.8 }}
-                                            className="text-[var(--swiss-green)] inline-block ml-1"
-                                        >|</motion.span>
-                                    </span>
-                                </h1>
+                            <button
+                                onClick={handleSaveAndRegister}
+                                className="group px-8 py-4 bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] text-white rounded-lg text-lg font-semibold transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                            >
+                                Create List (Top 5 Movies)
+                                <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <p className="text-xs text-[var(--swiss-text-muted)] mt-4">
+                                No credit card required • Free forever
+                            </p>
+                        </div>
 
-                                <p className="text-xl text-[var(--swiss-text-secondary)] mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                                    Create, share, and discover personalized ranked lists for anything. Track your favorites,
-                                    connect with friends, and build your ultimate vault.
-                                </p>
+                        {/* Right Column - Interactive Top 5 Form */}
+                        <div>
+                            {mounted && (
+                                <div className="bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded-xl p-6">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <h3 className="text-xl font-bold text-[var(--swiss-black)] flex items-center gap-2" style={{ letterSpacing: '-0.02em' }}>
+                                            <Star className="h-5 w-5 text-[var(--swiss-yellow)] fill-[var(--swiss-yellow)]" />
+                                            My Top 5 Movies
+                                        </h3>
+                                        <span className="text-[10px] font-bold px-2 py-1 bg-white text-[var(--swiss-text-muted)] border border-[var(--swiss-border)] rounded uppercase tracking-widest">
+                                            Draft
+                                        </span>
+                                    </div>
 
-                                {showForm && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.6 }}
-                                        className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+                                    <DndContext
+                                        sensors={sensors}
+                                        collisionDetection={closestCenter}
+                                        onDragEnd={handleDragEnd}
                                     >
-                                        <button
-                                            onClick={handleSaveAndRegister}
-                                            className="group px-8 py-4 bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] text-white rounded-lg text-lg font-semibold transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                                        <SortableContext
+                                            items={movies.map(m => m.id)}
+                                            strategy={verticalListSortingStrategy}
                                         >
-                                            Save My List & Create Account
-                                            <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                        </button>
-                                    </motion.div>
-                                )}
-
-                                <p className="text-sm text-[var(--swiss-text-muted)] mt-6">
-                                    No credit card required • Free forever
-                                </p>
-                            </div>
-
-                            {/* Right Column - Interactive Form */}
-                            <div className="relative min-h-[600px] flex items-center justify-center">
-                                <AnimatePresence>
-                                    {showForm && (
-                                        <motion.div
-                                            initial={{ opacity: 0, x: 50, scale: 0.95 }}
-                                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                                            transition={{ duration: 0.8, type: "spring" }}
-                                            className="w-full max-w-lg"
-                                        >
-                                            <div className="bg-white border border-[var(--swiss-border)] rounded-xl p-6 sm:p-8 shadow-sm">
-                                                <div className="flex items-center justify-between mb-6">
-                                                    <h3 className="text-2xl font-bold flex items-center gap-2 text-[var(--swiss-black)]">
-                                                        <Star className="h-6 w-6 text-[var(--swiss-yellow)] fill-[var(--swiss-yellow)]" />
-                                                        My Top 5 Movies
-                                                    </h3>
-                                                    <span className="text-[10px] font-bold px-2 py-1 bg-[var(--swiss-off-white)] text-[var(--swiss-text-muted)] border border-[var(--swiss-border)] rounded uppercase tracking-widest">Draft</span>
-                                                </div>
-
-                                                <DndContext
-                                                    sensors={sensors}
-                                                    collisionDetection={closestCenter}
-                                                    onDragEnd={handleDragEnd}
-                                                >
-                                                    <SortableContext
-                                                        items={movies.map(m => m.id)}
-                                                        strategy={verticalListSortingStrategy}
-                                                    >
-                                                        <div className="space-y-1">
-                                                            {movies.map((movie, index) => (
-                                                                <SortableMovieItem
-                                                                    key={movie.id}
-                                                                    id={movie.id}
-                                                                    index={index}
-                                                                    value={movie.value}
-                                                                    focused={focusedId === movie.id}
-                                                                    onChange={(val) => handleChange(movie.id, val)}
-                                                                    onFocus={() => setFocusedId(movie.id)}
-                                                                    onBlur={() => setFocusedId(null)}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                    </SortableContext>
-                                                </DndContext>
-
-                                                <div className="mt-6 p-4 bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded-lg">
-                                                    <p className="text-sm text-[var(--swiss-text-muted)] text-center flex items-center justify-center gap-2">
-                                                        <Sparkles className="h-4 w-4" />
-                                                        Drag to reorder • Start typing to create
-                                                    </p>
-                                                </div>
+                                            <div className="space-y-2">
+                                                {movies.map((movie, index) => (
+                                                    <SortableMovieItem
+                                                        key={movie.id}
+                                                        id={movie.id}
+                                                        index={index}
+                                                        value={movie.value}
+                                                        focused={focusedId === movie.id}
+                                                        onChange={(val) => handleChange(movie.id, val)}
+                                                        onFocus={() => setFocusedId(movie.id)}
+                                                        onBlur={() => setFocusedId(null)}
+                                                    />
+                                                ))}
                                             </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                                        </SortableContext>
+                                    </DndContext>
 
+                                    <div className="mt-5 p-3 bg-white border border-[var(--swiss-border)] rounded-lg text-center">
+                                        <p className="text-xs text-[var(--swiss-text-muted)] flex items-center justify-center gap-2">
+                                            <GripVertical className="h-3 w-3" />
+                                            Drag to reorder • Start typing to add
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleSaveAndRegister}
+                                        className="mt-4 w-full py-4 rounded-lg text-base font-semibold transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                                        style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                                    >
+                                        Save your list and start sharing
+                                        <ChevronRight className="h-5 w-5" />
+                                    </button>
+                                </div>
+                            )}
+                            {!mounted && (
+                                <div className="bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded-xl p-6 h-[400px] animate-pulse" />
+                            )}
                         </div>
                     </div>
-                </section>
-            </div>
+                </div>
+            </section>
 
-            {/* Features Section */}
-            <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 border-t border-[var(--swiss-border)] bg-[var(--swiss-off-white)]">
+            {/* SECTION 02 — SOCIAL PROOF */}
+            <section className="relative z-10 py-20 lg:py-28 px-4 sm:px-6 lg:px-8 bg-[var(--swiss-off-white)] border-b border-[var(--swiss-border)]">
                 <div className="max-w-7xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6 }}
-                        className="text-center mb-16"
-                    >
-                        <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-[var(--swiss-black)]">
-                            Rank Everything. Share Everywhere.
-                        </h2>
-                        <p className="text-xl text-[var(--swiss-text-secondary)] max-w-2xl mx-auto">
-                            The one place for all your lists. Stop juggling Goodreads, Letterboxd, and notes. Curate everything in one beautiful vault.
-                        </p>
-                    </motion.div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--swiss-text-muted)] mb-10 block">
+                        02 — SOCIAL PROOF
+                    </span>
+                    <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                        <motion.blockquote
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            className="border-l-4 border-[var(--swiss-black)] pl-6"
+                        >
+                            <p className="text-xl lg:text-2xl font-medium text-[var(--swiss-black)] mb-4 leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                                "Vaulted feels like the architectural digest of list-making. It forces you to be intentional about what you love."
+                            </p>
+                            <footer className="text-sm text-[var(--swiss-text-muted)] font-medium">
+                                — Sarah Jenkins
+                            </footer>
+                        </motion.blockquote>
+                        <motion.blockquote
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 }}
+                            className="border-l-4 border-[var(--swiss-black)] pl-6"
+                        >
+                            <p className="text-xl lg:text-2xl font-medium text-[var(--swiss-black)] mb-4 leading-relaxed" style={{ letterSpacing: '-0.01em' }}>
+                                "Finally, a place where my obsession with 70s sci-fi rankings isn't just noise, but a structured archive."
+                            </p>
+                            <footer className="text-sm text-[var(--swiss-text-muted)] font-medium">
+                                — Marcus Chen
+                            </footer>
+                        </motion.blockquote>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 03 — FEATURES */}
+            <section className="relative z-10 py-20 lg:py-28 px-4 sm:px-6 lg:px-8 border-b border-[var(--swiss-border)]">
+                <div className="max-w-7xl mx-auto">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--swiss-text-muted)] mb-10 block">
+                        03 — FEATURES
+                    </span>
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-12 text-[var(--swiss-black)]" style={{ letterSpacing: '-0.03em' }}>
+                        Rank Everything.<br />Share Everywhere.
+                    </h2>
 
                     <div className="grid md:grid-cols-3 gap-8">
                         {[
                             {
                                 icon: Sparkles,
                                 title: "Smart & Instant",
-                                description: "Stop manually typing details. Search for any movie, book, or place, and we'll auto-fill covers, years, and data instantly.",
+                                description: "Search for any movie, book, or place, and we'll auto-fill covers, years, and data instantly.",
                                 color: "var(--swiss-green)"
                             },
                             {
                                 icon: Users,
                                 title: "Share & Debate",
-                                description: "Perfect for book clubs and group chats. Share your curated lists with a single link and see where your tastes overlap.",
+                                description: "Perfect for book clubs and group chats. Share your curated lists with a single link.",
                                 color: "var(--swiss-black)"
                             },
                             {
                                 icon: Star,
                                 title: "Real Human Taste",
-                                description: "Discover recommendations from people you trust—not engagement algorithms. Find your next obsession, unfiltered.",
+                                description: "Discover recommendations from people you trust—not engagement algorithms.",
                                 color: "var(--swiss-yellow)"
                             }
                         ].map((feature, index) => (
@@ -429,8 +467,7 @@ export default function LandingPage() {
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.6, delay: index * 0.2 }}
-                                whileHover={{ y: -5 }}
+                                transition={{ duration: 0.5, delay: index * 0.1 }}
                                 className="group relative bg-white border border-[var(--swiss-border)] rounded-xl p-8 hover:border-[var(--swiss-black)] transition-all"
                             >
                                 <div
@@ -439,7 +476,7 @@ export default function LandingPage() {
                                 >
                                     <feature.icon className="h-6 w-6" style={{ color: feature.color === 'var(--swiss-black)' ? 'white' : feature.color === 'var(--swiss-yellow)' ? 'var(--swiss-black)' : 'var(--swiss-green)' }} />
                                 </div>
-                                <h3 className="text-2xl font-bold mb-3 text-[var(--swiss-black)]">{feature.title}</h3>
+                                <h3 className="text-xl font-bold mb-2 text-[var(--swiss-black)]" style={{ letterSpacing: '-0.02em' }}>{feature.title}</h3>
                                 <p className="text-[var(--swiss-text-secondary)] leading-relaxed">{feature.description}</p>
                             </motion.div>
                         ))}
@@ -447,8 +484,32 @@ export default function LandingPage() {
                 </div>
             </section>
 
+            {/* SECTION 04 — DISCOVER */}
+            <section className="relative z-10 py-20 lg:py-28 px-4 sm:px-6 lg:px-8 bg-[var(--swiss-off-white)] border-b border-[var(--swiss-border)]">
+                <div className="max-w-7xl mx-auto">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--swiss-text-muted)] mb-10 block">
+                        04 — DISCOVER
+                    </span>
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-12 text-[var(--swiss-black)]" style={{ letterSpacing: '-0.03em' }}>
+                        Explore Community Lists
+                    </h2>
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <ExampleListCard
+                            title="God-Tier A24 Horror"
+                            items={["Hereditary", "The Witch", "Midsommar"]}
+                            likes={442}
+                            comments={28}
+                        />
+                        <ExampleListCard
+                            title="Best Coffee In Berlin Mitte"
+                            items={["Bonanza Coffee", "Father Carpenter", "Distrikt Coffee", "Five Elephant"]}
+                        />
+                    </div>
+                </div>
+            </section>
+
             {/* CTA Section */}
-            <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 bg-[var(--swiss-black)]">
+            <section className="relative z-10 py-20 lg:py-28 px-4 sm:px-6 lg:px-8 bg-[var(--swiss-black)]">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
@@ -456,7 +517,7 @@ export default function LandingPage() {
                     transition={{ duration: 0.6 }}
                     className="max-w-4xl mx-auto text-center"
                 >
-                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-white">
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-white" style={{ letterSpacing: '-0.03em' }}>
                         Ready to Start Ranking?
                     </h2>
                     <p className="text-xl text-white/70 mb-8 max-w-2xl mx-auto">

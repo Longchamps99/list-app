@@ -113,7 +113,8 @@ function LoginForm() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full rounded-full bg-[var(--swiss-black)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--swiss-accent-hover)] focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full rounded-full px-4 py-2.5 text-sm font-medium focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ backgroundColor: '#000000', color: '#ffffff' }}
                         >
                             {isLoading ? "Signing in..." : "Sign in"}
                         </button>

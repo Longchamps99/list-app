@@ -547,9 +547,9 @@ export default function ListPage() {
                                                         <div className="flex-1 flex flex-col gap-1.5 min-w-0 overflow-hidden">
                                                             <div className="flex items-center gap-2">
                                                                 {isDraggable && (
-                                                                    <span className="flex-shrink-0 text-[var(--swiss-text-muted)] text-sm font-medium">
-                                                                        {index + 1}.
-                                                                    </span>
+                                                                    <div className="flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
+                                                                        <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                                    </div>
                                                                 )}
                                                                 <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
                                                                     <h3 className="font-semibold text-lg text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
@@ -617,9 +617,9 @@ export default function ListPage() {
                                                     <div className="flex items-center gap-3">
                                                         {/* Rank (if draggable) */}
                                                         {isDraggable && (
-                                                            <span className="flex-shrink-0 text-[var(--swiss-text-muted)] text-sm font-medium w-5">
-                                                                {index + 1}.
-                                                            </span>
+                                                            <div className="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
+                                                                <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                            </div>
                                                         )}
 
                                                         {/* Drag Handle (if draggable) */}
