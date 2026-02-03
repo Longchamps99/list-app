@@ -22,11 +22,11 @@ export default async function SharePage({ params }: Props) {
 
     if (!shareToken) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-                <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-                    <h1 className="text-2xl font-bold text-red-600 mb-4">Invalid Link</h1>
-                    <p className="text-gray-600 mb-6">This share link is invalid or has expired.</p>
-                    <Link href="/" className="text-indigo-600 hover:underline">Go Home</Link>
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--swiss-off-white)] p-4">
+                <div className="bg-white p-8 rounded-lg border border-[var(--swiss-border)] shadow-sm max-w-md w-full text-center">
+                    <h1 className="text-2xl font-bold text-[var(--swiss-red)] mb-4">Invalid Link</h1>
+                    <p className="text-[var(--swiss-text-secondary)] mb-6">This share link is invalid or has expired.</p>
+                    <Link href="/" className="text-[var(--swiss-text-secondary)] hover:text-[var(--swiss-black)] transition-colors">Go Home</Link>
                 </div>
             </div>
         );
@@ -238,35 +238,35 @@ export default async function SharePage({ params }: Props) {
 
     // 3. User NOT logged in -> Show "Join to View"
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
-            <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--swiss-off-white)] p-4">
+            <div className="bg-white p-8 rounded-lg border border-[var(--swiss-border)] shadow-sm max-w-md w-full text-center">
                 <div className="mb-6">
                     {shareToken.creator.image ? (
-                        <img src={shareToken.creator.image} alt={shareToken.creator.name || "User"} className="w-16 h-16 rounded-full mx-auto border-4 border-white shadow" />
+                        <img src={shareToken.creator.image} alt={shareToken.creator.name || "User"} className="w-16 h-16 rounded-full mx-auto border-4 border-white shadow-sm" />
                     ) : (
-                        <div className="w-16 h-16 rounded-full mx-auto bg-indigo-100 flex items-center justify-center text-indigo-600 text-xl font-bold">
+                        <div className="w-16 h-16 rounded-full mx-auto bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-secondary)] text-xl font-bold border border-[var(--swiss-border)]">
                             {shareToken.creator.name?.[0] || "U"}
                         </div>
                     )}
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                <h1 className="text-2xl font-bold text-[var(--swiss-black)] mb-2">
                     {shareToken.creator.name} shared a {shareToken.type.toLowerCase()} with you!
                 </h1>
-                <p className="text-gray-600 mb-8">
+                <p className="text-[var(--swiss-text-secondary)] mb-8">
                     To view this {shareToken.type.toLowerCase()}, you need to sign in or create an account.
                 </p>
 
                 <div className="space-y-4">
                     <Link
                         href={`/register?callbackUrl=/share/${token}`}
-                        className="block w-full py-3 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition"
+                        className="block w-full py-3 px-4 bg-[var(--swiss-black)] text-white rounded-lg font-medium hover:bg-[var(--swiss-accent-hover)] transition"
                     >
                         Create Account
                     </Link>
                     <Link
                         href={`/login?callbackUrl=/share/${token}`}
-                        className="block w-full py-3 px-4 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition"
+                        className="block w-full py-3 px-4 bg-white border border-[var(--swiss-border)] text-[var(--swiss-black)] rounded-lg font-medium hover:bg-[var(--swiss-off-white)] transition"
                     >
                         Log In
                     </Link>

@@ -7,47 +7,41 @@ import { motion } from "framer-motion";
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white flex flex-col">
+        <div className="min-h-screen bg-white text-[var(--swiss-black)] flex flex-col">
             <Header variant="page" title="Privacy Policy" showBack={true} backHref="/" />
 
-            {/* Background Effects */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-            </div>
-
-            <main className="flex-1 relative z-10 py-16 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <h1 className="text-4xl sm:text-5xl font-bold mb-8 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                        <h1 className="text-4xl sm:text-5xl font-bold mb-8 text-[var(--swiss-black)]">
                             Privacy Policy
                         </h1>
-                        <p className="text-gray-400 mb-12 text-lg">
+                        <p className="text-[var(--swiss-text-muted)] mb-12 text-lg">
                             Last updated: January 28, 2026. Your privacy is at the core of Vaulted. We built this app to help you curate your legacy, not to exploit your data.
                         </p>
 
                         <div className="space-y-12">
                             {/* Key Promise */}
-                            <section className="bg-indigo-500/10 border border-indigo-500/30 rounded-2xl p-6 sm:p-8">
+                            <section className="bg-[var(--swiss-green-light)] border border-[var(--swiss-green)]/30 rounded-lg p-6 sm:p-8">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <Shield className="h-8 w-8 text-indigo-400" />
-                                    <h2 className="text-2xl font-bold">Our Commitment</h2>
+                                    <Shield className="h-8 w-8 text-[var(--swiss-green)]" />
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-green)]">Our Commitment</h2>
                                 </div>
-                                <p className="text-indigo-100 text-lg leading-relaxed font-medium">
+                                <p className="text-[var(--swiss-text)] text-lg leading-relaxed font-medium">
                                     **We do not sell your personal data.** Vaulted is a tool for collectors and curators. We make money by providing value to you, not by selling your information to third-party advertisers or data brokers.
                                 </p>
                             </section>
 
                             <section>
-                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                <div className="flex items-center gap-3 mb-4 text-[var(--swiss-text-secondary)]">
                                     <Eye className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">Information We Collect</h2>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">Information We Collect</h2>
                                 </div>
-                                <div className="space-y-4 text-gray-300 leading-relaxed">
+                                <div className="space-y-4 text-[var(--swiss-text-secondary)] leading-relaxed">
                                     <p>
                                         When you use Vaulted, we collect information necessary to provide the service:
                                     </p>
@@ -60,42 +54,42 @@ export default function PrivacyPage() {
                             </section>
 
                             <section>
-                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                <div className="flex items-center gap-3 mb-4 text-[var(--swiss-text-secondary)]">
                                     <Lock className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">How Your Data is Secured</h2>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">How Your Data is Secured</h2>
                                 </div>
-                                <p className="text-gray-300 leading-relaxed">
+                                <p className="text-[var(--swiss-text-secondary)] leading-relaxed">
                                     Your data is stored securely using industry-standard encryption on Google Cloud Platform. We use secure OAuth 2.0 protocols for authentication, meaning we never see or store your Google password.
                                 </p>
                             </section>
 
                             <section>
-                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                <div className="flex items-center gap-3 mb-4 text-[var(--swiss-text-secondary)]">
                                     <Share2 className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">Sharing Data</h2>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">Sharing Data</h2>
                                 </div>
-                                <p className="text-gray-300 leading-relaxed">
+                                <p className="text-[var(--swiss-text-secondary)] leading-relaxed">
                                     The only time your data is shared is when **you** explicitly choose to share it—such as when you send a "Share" link for a list or item to a friend. We do not share your private lists or account details with anyone.
                                 </p>
                             </section>
 
                             <section>
-                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                <div className="flex items-center gap-3 mb-4 text-[var(--swiss-text-secondary)]">
                                     <Trash2 className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">Your Rights & Data Deletion</h2>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">Your Rights & Data Deletion</h2>
                                 </div>
-                                <div className="space-y-4 text-gray-300 leading-relaxed">
+                                <div className="space-y-4 text-[var(--swiss-text-secondary)] leading-relaxed">
                                     <p>
                                         You have full control over your data. In accordance with GDPR and CCPA guidelines, you have the right to access, correct, or delete your personal information.
                                     </p>
-                                    <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                                        <h3 className="text-white font-semibold mb-2 flex items-center gap-2">
+                                    <div className="bg-[var(--swiss-off-white)] rounded-lg p-6 border border-[var(--swiss-border)]">
+                                        <h3 className="text-[var(--swiss-black)] font-semibold mb-2 flex items-center gap-2">
                                             Permanent Account Deletion
                                         </h3>
                                         <p className="text-sm mb-3">
                                             You can permanently delete your account at any time through your <strong>Settings</strong> page.
                                         </p>
-                                        <ul className="list-disc pl-5 text-sm space-y-1 text-gray-400">
+                                        <ul className="list-disc pl-5 text-sm space-y-1 text-[var(--swiss-text-muted)]">
                                             <li>Deletion is permanent and cannot be undone.</li>
                                             <li>All your lists, items, and shares will be immediately scrubbed from our active databases.</li>
                                             <li>All authentication tokens and session data will be invalidated and removed.</li>
@@ -105,11 +99,11 @@ export default function PrivacyPage() {
                                 </div>
                             </section>
                             <section>
-                                <div className="flex items-center gap-3 mb-4 text-indigo-400">
+                                <div className="flex items-center gap-3 mb-4 text-[var(--swiss-text-secondary)]">
                                     <Shield className="h-6 w-6" />
-                                    <h2 className="text-2xl font-bold text-white">Compliance & Global Rights</h2>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">Compliance & Global Rights</h2>
                                 </div>
-                                <div className="space-y-4 text-gray-300 leading-relaxed text-sm">
+                                <div className="space-y-4 text-[var(--swiss-text-secondary)] leading-relaxed text-sm">
                                     <p>
                                         <strong>GDPR (General Data Protection Regulation):</strong> For users in the EU/EEA, Vaulted acts as a Data Controller. You have the right to data portability, the right to be forgotten, and the right to object to processing.
                                     </p>
@@ -123,9 +117,9 @@ export default function PrivacyPage() {
                             </section>
                         </div>
 
-                        <div className="mt-20 pt-8 border-t border-white/10 text-center">
-                            <p className="text-gray-500 mb-4">Questions about your privacy?</p>
-                            <a href="mailto:privacy@vaultedfaves.com" className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium">
+                        <div className="mt-20 pt-8 border-t border-[var(--swiss-border)] text-center">
+                            <p className="text-[var(--swiss-text-muted)] mb-4">Questions about your privacy?</p>
+                            <a href="mailto:privacy@vaultedfaves.com" className="text-[var(--swiss-text-secondary)] hover:text-[var(--swiss-black)] transition-colors font-medium">
                                 privacy@vaultedfaves.com
                             </a>
                         </div>
@@ -134,9 +128,9 @@ export default function PrivacyPage() {
             </main>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-white/10 py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto flex justify-center gap-6 text-gray-400 text-sm">
-                    <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <footer className="border-t border-[var(--swiss-border)] py-8 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto flex justify-center gap-6 text-[var(--swiss-text-muted)] text-sm">
+                    <Link href="/" className="hover:text-[var(--swiss-black)] transition-colors">Home</Link>
                     <span>© 2026 Vaulted</span>
                 </div>
             </footer>

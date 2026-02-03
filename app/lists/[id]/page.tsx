@@ -366,8 +366,8 @@ export default function ListPage() {
         }
     };
 
-    if (loading) return <div className="p-8">Loading...</div>;
-    if (!list) return <div className="p-8">List not found</div>;
+    if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="text-[var(--swiss-text-secondary)]">Loading...</div></div>;
+    if (!list) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="text-[var(--swiss-text-secondary)]">List not found</div></div>;
 
     return (
         <>
@@ -379,23 +379,23 @@ export default function ListPage() {
             >
                 {/* Page-specific actions in header */}
                 <div className="flex items-center gap-3 ml-auto">
-                    {/* Invite Collaborators Button */}
+                    {/* Invite Collaborators Button - Secondary style */}
                     <button
                         onClick={() => setShowInviteModal(true)}
-                        className="bg-purple-600 text-white hover:bg-purple-700 px-4 py-2 rounded-md transition-colors border-0 shadow-sm font-medium flex items-center gap-2"
+                        className="flex items-center gap-2 px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-4 w-4 stroke-current" fill="none" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM12.75 12a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                         </svg>
                         Invite
                     </button>
 
-                    {/* Blue Share Button */}
+                    {/* Share Button - Secondary style */}
                     <ShareButton
                         type="LIST"
                         id={list.id}
                         title={list.title}
-                        className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-2 rounded-md transition-colors border-0 shadow-sm font-medium flex items-center gap-2"
+                        className="flex items-center gap-2 px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm"
                     />
 
                     <button
@@ -409,20 +409,15 @@ export default function ListPage() {
                     </button>
                 </div>
             </Header>
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col relative overflow-hidden">
-                {/* Background Effects */}
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-                </div>
+            <div className="min-h-screen bg-white flex flex-col">
 
                 {/* Tag Filters Bar - Green */}
                 {list.filterTags && list.filterTags.length > 0 && (
-                    <div className="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 relative z-10">
+                    <div className="bg-[var(--swiss-off-white)] border-b border-[var(--swiss-border)]">
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2 items-center">
-                            <span className="text-sm text-gray-400 mr-2">Filters:</span>
+                            <span className="text-sm text-[var(--swiss-text-muted)] mr-2">Filters:</span>
                             {list.filterTags.map(({ tag }) => (
-                                <span key={tag.id} className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                                <span key={tag.id} className="px-3 py-1 bg-[var(--swiss-off-white)] text-[var(--swiss-text)] border border-[var(--swiss-border)] rounded-full text-sm font-medium">
                                     #{tag.name}
                                 </span>
                             ))}
@@ -430,26 +425,26 @@ export default function ListPage() {
                     </div>
                 )}
                 {/* Main Content */}
-                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0 relative z-10">
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
                     {/* Controls Bar */}
                     <div className="mb-6 flex items-center justify-between">
                         {/* Search Bar */}
                         <div className="flex-1 max-w-2xl relative mr-6">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
                                 <input
                                     type="text"
                                     placeholder="Search items..."
-                                    className="w-full pl-10 pr-20 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm text-white placeholder-gray-500"
+                                    className="w-full pl-10 pr-20 py-2.5 bg-white border border-[var(--swiss-border)] rounded-full focus:border-[var(--swiss-black)] focus:outline-none transition-all text-sm text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)]"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
                                 <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-400 bg-slate-700/50 border border-white/10 rounded">
+                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
                                         ⌘K
                                     </kbd>
                                 </div>
@@ -461,30 +456,29 @@ export default function ListPage() {
                             {/* Add New Item Button */}
                             <Link
                                 href="/items/new"
-                                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 !text-white rounded-lg hover:from-green-500 hover:to-emerald-500 hover:-translate-y-0.5 transition-all font-bold text-sm shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--swiss-black)] rounded-full hover:bg-[var(--swiss-accent-hover)] transition-all font-medium text-sm"
                             >
-                                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-4 w-4 stroke-white" fill="none" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="text-white hidden sm:inline">Add New Item</span>
+                                <span className="hidden sm:inline text-white">New Item</span>
                             </Link>
 
-                            {/* View and Sort Controls - Grouped */}
-                            <div className="flex items-center gap-3 border border-white/10 rounded-lg p-1 bg-slate-800/50 backdrop-blur-sm">
+                            <div className="flex items-center gap-3 border border-[var(--swiss-border)] rounded-full px-2 py-1 bg-white">
                                 {/* View Toggle */}
-                                <div className="flex items-center gap-1 border-r border-white/10 pr-3">
+                                <div className="flex items-center gap-1 border-r border-[var(--swiss-border)] pr-3">
                                     <button
                                         onClick={() => setViewMode("grid")}
-                                        className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                                        className={`p-1.5 rounded-full transition-colors ${viewMode === "grid" ? "bg-[var(--swiss-black)] text-white" : "text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)]"}`}
                                         title="Grid view"
                                     >
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                                         </svg>
                                     </button>
                                     <button
                                         onClick={() => setViewMode("list")}
-                                        className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                                        className={`p-1.5 rounded-full transition-colors ${viewMode === "list" ? "bg-[var(--swiss-black)] text-white" : "text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)]"}`}
                                         title="List view"
                                     >
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -495,9 +489,9 @@ export default function ListPage() {
 
                                 {/* Sort Dropdown */}
                                 <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-gray-400 font-medium">Sort:</span>
+                                    <span className="text-[var(--swiss-text-muted)] font-medium">Sort:</span>
                                     <select
-                                        className="border-0 focus:ring-0 text-sm font-medium text-white bg-transparent cursor-pointer pr-8"
+                                        className="border-0 focus:ring-0 text-sm font-medium text-[var(--swiss-text)] bg-transparent cursor-pointer pr-6"
                                         value={sort}
                                         onChange={(e) => setSort(e.target.value)}
                                     >
@@ -530,72 +524,76 @@ export default function ListPage() {
                                         filteredItems.map((item, index) => (
                                             <SortableItem key={item.id} id={item.id}>
                                                 {(dragHandleProps) => (
-                                                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 p-4 flex items-center gap-6 group hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all border border-white/10 hover:border-indigo-500/30 relative h-full">
+                                                    <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-5 flex items-start gap-5 group hover:border-[var(--swiss-text-muted)] transition-all h-full">
                                                         {/* Grip */}
-                                                        <div className="text-indigo-400 hover:text-indigo-300 cursor-grab active:cursor-grabbing flex-shrink-0 pr-2 border-r border-white/10 h-full flex items-center" {...dragHandleProps}>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
-                                                        </div>
+                                                        {isDraggable && (
+                                                            <div className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] cursor-grab active:cursor-grabbing flex-shrink-0 pt-1" {...dragHandleProps}>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
+                                                            </div>
+                                                        )}
 
                                                         {/* Image */}
                                                         <Link href={`/items/${item.id}`} className="flex-shrink-0">
                                                             {item.imageUrl ? (
-                                                                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 relative">
+                                                                <div className="w-20 h-20 rounded-lg overflow-hidden">
                                                                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                                                                 </div>
                                                             ) : (
-                                                                <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center text-gray-500 text-xs border-2 border-white/10 shadow-sm">No Img</div>
+                                                                <div className="w-20 h-20 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs">No Img</div>
                                                             )}
                                                         </Link>
 
                                                         {/* Content */}
-                                                        <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30 leading-none">
-                                                                    #{index + 1}
-                                                                </div>
+                                                        <div className="flex-1 flex flex-col gap-1.5 min-w-0 overflow-hidden">
+                                                            <div className="flex items-center gap-2">
+                                                                {isDraggable && (
+                                                                    <span className="flex-shrink-0 text-[var(--swiss-text-muted)] text-sm font-medium">
+                                                                        {index + 1}.
+                                                                    </span>
+                                                                )}
                                                                 <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
-                                                                    <h3 className="font-bold text-xl text-white hover:text-indigo-400 transition truncate">
+                                                                    <h3 className="font-semibold text-lg text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
                                                                         {item.title || "Untitled"}
                                                                     </h3>
                                                                 </Link>
                                                             </div>
 
-                                                            <p className="text-gray-400 text-sm line-clamp-1">{item.content}</p>
+                                                            <p className="text-[var(--swiss-text-secondary)] text-sm line-clamp-1">{item.content}</p>
 
                                                             {/* Tags */}
                                                             {item.tags.length > 0 && (
-                                                                <div className="flex flex-wrap gap-2 mt-1">
+                                                                <div className="flex flex-wrap gap-1.5 mt-1">
                                                                     {item.tags.slice(0, 4).map(({ tag }) => (
                                                                         <button
                                                                             key={tag.id}
                                                                             onClick={() => openSmartList(tag.name)}
-                                                                            className="inline-block px-3 py-1 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-xs font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
+                                                                            className="inline-block px-2.5 py-0.5 bg-[var(--swiss-off-white)] text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full text-xs font-medium hover:bg-[var(--swiss-cream)] hover:border-[var(--swiss-text-muted)] transition-all cursor-pointer"
                                                                         >
                                                                             #{tag.name}
                                                                         </button>
                                                                     ))}
                                                                     {item.tags.length > 4 && (
-                                                                        <span className="text-xs text-gray-400 self-center">+{item.tags.length - 4}</span>
+                                                                        <span className="text-xs text-[var(--swiss-text-muted)] self-center">+{item.tags.length - 4}</span>
                                                                     )}
                                                                 </div>
                                                             )}
 
                                                             {/* Footer Actions */}
-                                                            <div className="flex items-center gap-4 mt-2">
+                                                            <div className="flex items-center gap-3 mt-2">
                                                                 <ShareButton
                                                                     type="ITEM"
                                                                     id={item.id}
                                                                     title={item.title || "Item"}
-                                                                    className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0 shadow-sm"
+                                                                    className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors border-0"
                                                                 />
 
-                                                                <button onClick={() => deleteItem(item.id)} className="p-1.5 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                                                                <button onClick={() => deleteItem(item.id)} className="p-1 rounded text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
 
-                                                                <span className="text-xs text-gray-400 ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                                <span className="text-xs text-[var(--swiss-text-muted)]">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                                 {item.shares?.length > 0 && (
-                                                                    <div className="ml-auto text-[#4f46e5] font-medium text-sm flex items-center gap-1">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                                                    <div className="ml-auto text-[var(--swiss-text-secondary)] font-medium text-xs flex items-center gap-1">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
                                                                             <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                                                                         </svg>
                                                                         Shared
@@ -615,18 +613,18 @@ export default function ListPage() {
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragHandleProps) => (
-                                                <div className="bg-slate-900/50 backdrop-blur-xl rounded-lg shadow-sm border border-white/10 p-3 flex flex-col gap-2 group hover:border-indigo-500/30 transition-all relative">
+                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 flex flex-col gap-2 group hover:border-[var(--swiss-text-muted)] transition-all">
                                                     <div className="flex items-center gap-3">
                                                         {/* Rank (if draggable) */}
                                                         {isDraggable && (
-                                                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-indigo-500/30 leading-none">
-                                                                #{index + 1}
-                                                            </div>
+                                                            <span className="flex-shrink-0 text-[var(--swiss-text-muted)] text-sm font-medium w-5">
+                                                                {index + 1}.
+                                                            </span>
                                                         )}
 
                                                         {/* Drag Handle (if draggable) */}
                                                         {isDraggable && (
-                                                            <div className="cursor-grab text-indigo-400 hover:text-indigo-300 px-1 border-r border-white/10 pr-2 flex-shrink-0" {...dragHandleProps}>
+                                                            <div className="cursor-grab text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] px-1 border-r border-[var(--swiss-border)] pr-2 flex-shrink-0" {...dragHandleProps}>
                                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                                                                 </svg>
@@ -635,17 +633,17 @@ export default function ListPage() {
 
                                                         {/* Title */}
                                                         <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
-                                                            <h3 className="font-bold text-white hover:text-indigo-400 transition truncate text-sm">
+                                                            <h3 className="font-medium text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate text-sm">
                                                                 {item.title || "Untitled"}
                                                             </h3>
                                                         </Link>
 
                                                         {/* Actions & Metadata */}
                                                         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                                                            <span className="text-xs text-gray-500 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                            <span className="text-xs text-[var(--swiss-text-muted)] whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                             {item.shares?.length > 0 && (
-                                                                <div className="text-[#4f46e5] font-medium text-xs flex items-center gap-1" title="Shared">
+                                                                <div className="text-[var(--swiss-text-secondary)] font-medium text-xs flex items-center gap-1" title="Shared">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
                                                                         <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                                                                     </svg>
@@ -656,15 +654,15 @@ export default function ListPage() {
                                                                 type="ITEM"
                                                                 id={item.id}
                                                                 title={item.title || "Item"}
-                                                                className="bg-[#2563eb] text-white hover:bg-blue-700 px-3 py-1 rounded-full text-xs font-medium transition-colors border-0 shadow-sm"
+                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors border-0"
                                                             />
 
                                                             <button
                                                                 onClick={() => deleteItem(item.id)}
-                                                                className="p-1 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
+                                                                className="p-1 rounded text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors"
                                                                 title="Delete item"
                                                             >
-                                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                 </svg>
                                                             </button>
@@ -673,18 +671,18 @@ export default function ListPage() {
 
                                                     {/* Bottom Row: Tags (if any) */}
                                                     {item.tags.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[calc(1.5rem+12px)]"> {/* Indent to align with title if desired, or keep left */}
+                                                        <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-6">
                                                             {item.tags.slice(0, 4).map(({ tag }) => (
                                                                 <button
                                                                     key={tag.id}
                                                                     onClick={() => openSmartList(tag.name)}
-                                                                    className="inline-block px-2 py-0.5 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-[10px] font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
+                                                                    className="inline-block px-2 py-0.5 bg-[var(--swiss-off-white)] text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full text-[10px] font-medium hover:bg-[var(--swiss-cream)] hover:border-[var(--swiss-text-muted)] transition-all cursor-pointer"
                                                                 >
                                                                     #{tag.name}
                                                                 </button>
                                                             ))}
                                                             {item.tags.length > 4 && (
-                                                                <span className="text-[10px] text-gray-400 self-center">+{item.tags.length - 4}</span>
+                                                                <span className="text-[10px] text-[var(--swiss-text-muted)] self-center">+{item.tags.length - 4}</span>
                                                             )}
                                                         </div>
                                                     )}
@@ -733,8 +731,8 @@ export default function ListPage() {
                                         <button
                                             onClick={() => setInvitePermission('WRITE')}
                                             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'WRITE'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
                                         >
                                             Can Edit
@@ -742,8 +740,8 @@ export default function ListPage() {
                                         <button
                                             onClick={() => setInvitePermission('READ')}
                                             className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'READ'
-                                                    ? 'bg-purple-600 text-white'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                ? 'bg-purple-600 text-white'
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                                 }`}
                                         >
                                             View Only

@@ -6,6 +6,7 @@ export interface EnrichedItem {
     tags: string[];
     imageVerifyQuery?: string;
     imageUrl?: string;
+    location?: string; // Address or location for places
 }
 
 export async function enrichItems(rawItems: string[]): Promise<EnrichedItem[]> {
@@ -35,9 +36,16 @@ export async function enrichItems(rawItems: string[]): Promise<EnrichedItem[]> {
            - CRITICAL: The FIRST tag MUST be one of these primary categories: "Movie", "TV Series", "Book", "Place", "Song", "Restaurant", "Product", "Person", "Event", "Accommodation", "Game", "Music Album".
            - The remaining tags should be specific genres, vibes, or descriptors.
         4. A specific search query to find a high-quality image (e.g. "The Matrix movie poster", "Inception film still").
+        5. For places, restaurants, hotels, accommodations, or any physical location: include the full street address in the "location" field (e.g. "112 East 11th Street, New York, NY 10003"). For non-physical items like movies, books, or songs, leave location as null or empty.
 
         Return ONLY a JSON array of objects. Do not include markdown formatting.
-        Format: [{"title": "Item Name", "description": "Short text", "tags": ["Tag1", "Tag2"], "imageVerifyQuery": "Item Name poster"}]
+        Format: [{
+            "title": "Item Name", 
+            "description": "Short text", 
+            "tags": ["Tag1", "Tag2"], 
+            "imageVerifyQuery": "Item Name poster",
+            "location": "Full street address or null"
+        }]
 
         Items:
         ${JSON.stringify(rawItems)}

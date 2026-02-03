@@ -221,7 +221,7 @@ export default function NewItemPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col relative overflow-hidden">
+        <div className="min-h-screen bg-white flex flex-col">
             <Header
                 variant="page"
                 title="Add New Item"
@@ -229,20 +229,14 @@ export default function NewItemPage() {
                 backHref="/dashboard"
             >
                 {isSaving && (
-                    <div className="ml-auto flex items-center gap-2 text-indigo-400 text-xs font-medium">
+                    <div className="ml-auto flex items-center gap-2 text-[var(--swiss-text-muted)] text-xs font-medium">
                         <Loader2 className="h-3 w-3 animate-spin" />
                         Saving...
                     </div>
                 )}
             </Header>
 
-            {/* Background Effects */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-            </div>
-
-            <main className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8 relative z-10">
+            <main className="flex-1 flex flex-col items-center justify-start p-4 sm:p-8">
                 <AnimatePresence mode="wait">
                     {!hasSearched ? (
                         <motion.div
@@ -253,55 +247,40 @@ export default function NewItemPage() {
                             className="max-w-2xl w-full"
                         >
                             {/* Instructions (Expanded) */}
-                            <div className="mb-12 text-gray-200 leading-relaxed bg-slate-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl">
-                                <h2 className="text-2xl font-bold text-white mb-4">Hello! What are we adding today?</h2>
-                                <p className="text-lg text-gray-400">
+                            <div className="mb-12 bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] p-8 rounded-lg">
+                                <h2 className="text-2xl font-bold text-[var(--swiss-black)] mb-4">Hello! What are we adding today?</h2>
+                                <p className="text-lg text-[var(--swiss-text-secondary)]">
                                     Favorite movie? Book? Hotel? Nail polish color? Football player? Drop it in the box below and let AI help you fill in the details.
                                 </p>
-                                <div className="mt-8 flex items-center gap-4 text-sm font-medium text-indigo-400">
-                                    <div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                        <Search className="h-5 w-5" />
+                                <div className="mt-8 flex items-center gap-4 text-sm font-medium text-[var(--swiss-text-secondary)]">
+                                    <div className="h-10 w-10 rounded-full bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] flex items-center justify-center">
+                                        <Search className="h-5 w-5 text-[var(--swiss-black)]" />
                                     </div>
                                     <span>Try &quot;The Dark Knight&quot; or &quot;Ritz Paris&quot;</span>
                                 </div>
-                                <div className="mt-6 pt-6 border-t border-white/5 flex justify-between items-center text-sm">
-                                    <span className="text-gray-400">Have many items?</span>
-                                    <Link href="/items/paste" className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 decoration-emerald-500/50 transition-all flex items-center gap-2">
+                                <div className="mt-6 pt-6 border-t border-[var(--swiss-border)] flex justify-between items-center text-sm">
+                                    <span className="text-[var(--swiss-text-muted)]">Have many items?</span>
+                                    <Link href="/items/paste" className="text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] font-bold underline underline-offset-4 transition-all flex items-center gap-2">
                                         <Plus className="h-4 w-4" />
                                         Try Smart Paste
                                     </Link>
                                 </div>
                             </div>
 
-                            {/* Glowing Search Box */}
+                            {/* Search Box - Swiss Design */}
                             <div className="relative group">
-                                <motion.div
-                                    animate={{
-                                        boxShadow: [
-                                            "0 0 0px 0px rgba(99, 102, 241, 0)",
-                                            "0 0 30px 4px rgba(99, 102, 241, 0.4)",
-                                            "0 0 0px 0px rgba(99, 102, 241, 0)"
-                                        ],
-                                        borderColor: ["rgba(255,255,255,0.1)", "rgba(99, 102, 241, 0.5)", "rgba(255,255,255,0.1)"]
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
-                                    className="relative flex items-center bg-slate-800/50 backdrop-blur-xl border-2 rounded-2xl overflow-hidden p-2 transition-all hover:border-indigo-500/50 shadow-2xl"
-                                >
+                                <div className="relative flex items-center bg-white border-2 border-[var(--swiss-border)] rounded-full overflow-hidden p-2 transition-all hover:border-[var(--swiss-black)] focus-within:border-[var(--swiss-black)]">
                                     <div className="pl-6 pr-4">
                                         {isSearching || isEnriching ? (
-                                            <Loader2 className="h-6 w-6 text-indigo-500 animate-spin" />
+                                            <Loader2 className="h-6 w-6 text-[var(--swiss-black)] animate-spin" />
                                         ) : (
-                                            <Search className="h-6 w-6 text-indigo-400" />
+                                            <Search className="h-6 w-6 text-[var(--swiss-text-muted)]" />
                                         )}
                                     </div>
                                     <input
                                         autoFocus
                                         type="text"
-                                        className="flex-1 bg-transparent border-none focus:ring-0 text-xl py-6 text-white placeholder-gray-500"
+                                        className="flex-1 bg-transparent border-none focus:ring-0 text-xl py-6 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
                                         placeholder="Enter title or link..."
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
@@ -312,12 +291,12 @@ export default function NewItemPage() {
                                     <button
                                         onClick={searchForCandidates}
                                         disabled={!title.trim() || isSearching || isEnriching}
-                                        className={`${primaryButtonClass} mr-2 py-4 px-8 rounded-xl`}
+                                        className={`${primaryButtonClass} mr-2 py-4 px-8 rounded-full`}
                                     >
                                         Search
                                     </button>
-                                </motion.div>
-                                <p className="text-center mt-6 text-indigo-400/60 font-medium animate-pulse text-xs tracking-widest uppercase">
+                                </div>
+                                <p className="text-center mt-6 text-[var(--swiss-text-muted)] font-medium text-xs tracking-widest uppercase">
                                     AI-powered enrichment active
                                 </p>
                             </div>
@@ -334,17 +313,17 @@ export default function NewItemPage() {
                                 <div className="p-8 sm:p-10 flex flex-col md:flex-row gap-8 items-start relative box-border">
                                     {/* Thumbnail Selection Area */}
                                     <div className="relative group shrink-0">
-                                        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 bg-slate-800">
+                                        <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-lg overflow-hidden border border-[var(--swiss-border)] bg-[var(--swiss-off-white)]">
                                             <SafeImage
                                                 src={imageUrl}
                                                 alt={title}
                                                 className="w-full h-full object-cover"
-                                                fallback={<ImageIcon className="h-10 w-10 text-gray-600" />}
+                                                fallback={<ImageIcon className="h-10 w-10 text-[var(--swiss-text-muted)]" />}
                                             />
                                         </div>
                                         <button
                                             onClick={() => setIsEditingThumbnail(!isEditingThumbnail)}
-                                            className="absolute bottom-1 right-1 p-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg transition-transform hover:scale-110 active:scale-90 z-20"
+                                            className="absolute bottom-1 right-1 p-2.5 bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] text-white rounded-full transition-transform hover:scale-110 active:scale-90 z-20"
                                         >
                                             <Edit2 className="h-4 w-4" />
                                         </button>
@@ -356,19 +335,19 @@ export default function NewItemPage() {
                                                     initial={{ opacity: 0, scale: 0.9, y: 10 }}
                                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                                     exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                                    className="absolute top-full mt-4 left-0 w-72 bg-slate-900 border border-white/10 rounded-xl shadow-2xl z-50 p-4"
+                                                    className="absolute top-full mt-4 left-0 w-72 bg-white border border-[var(--swiss-border)] rounded-lg shadow-lg z-50 p-4"
                                                 >
                                                     <div className="flex justify-between items-center mb-4">
-                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Update Thumbnail</span>
-                                                        <button onClick={() => setIsEditingThumbnail(false)} className="text-gray-500 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+                                                        <span className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">Update Thumbnail</span>
+                                                        <button onClick={() => setIsEditingThumbnail(false)} className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors"><X className="h-4 w-4" /></button>
                                                     </div>
-                                                    <div className="flex gap-2 mb-4 p-1 bg-slate-800/50 rounded-lg">
+                                                    <div className="flex gap-2 mb-4 p-1 bg-[var(--swiss-off-white)] rounded-lg">
                                                         <button
-                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'url' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
+                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'url' ? 'bg-[var(--swiss-black)] text-white' : 'text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)]'}`}
                                                             onClick={() => setThumbnailMode('url')}
                                                         >URL</button>
                                                         <button
-                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'upload' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
+                                                            className={`flex-1 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded transition-all ${thumbnailMode === 'upload' ? 'bg-[var(--swiss-black)] text-white' : 'text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)]'}`}
                                                             onClick={() => setThumbnailMode('upload')}
                                                         >Upload</button>
                                                     </div>
@@ -382,9 +361,9 @@ export default function NewItemPage() {
                                                             onChange={(e) => setImageUrl(e.target.value)}
                                                         />
                                                     ) : (
-                                                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-white/10 rounded-lg p-6 hover:bg-white/5 cursor-pointer transition-colors group/upload">
-                                                            <Upload className="h-6 w-6 text-indigo-400 mb-2 group-hover/upload:scale-110 transition-transform" />
-                                                            <span className="text-[10px] font-bold text-gray-400 uppercase">Choose Image</span>
+                                                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-[var(--swiss-border)] rounded-lg p-6 hover:bg-[var(--swiss-off-white)] cursor-pointer transition-colors group/upload">
+                                                            <Upload className="h-6 w-6 text-[var(--swiss-text-muted)] mb-2 group-hover/upload:scale-110 transition-transform" />
+                                                            <span className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase">Choose Image</span>
                                                             <input type="file" className="hidden" onChange={handleFileUpload} accept="image/*" />
                                                         </label>
                                                     )}
@@ -398,30 +377,30 @@ export default function NewItemPage() {
                                         <div className="space-y-3">
                                             <input
                                                 type="text"
-                                                className="w-full bg-transparent border-none focus:ring-1 focus:ring-indigo-500/20 rounded-md p-1 -ml-1 text-3xl sm:text-4xl font-bold text-white placeholder-white/10 transition-all"
+                                                className="w-full bg-transparent border-b border-[var(--swiss-border)] focus:border-[var(--swiss-black)] focus:outline-none p-2 text-3xl sm:text-4xl font-bold text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)] transition-all"
                                                 value={title}
                                                 onChange={(e) => setTitle(e.target.value)}
                                                 placeholder="Title"
                                             />
-                                            {/* Green Style Tags */}
+                                            {/* Neutral Style Tags - matching dashboard */}
                                             <div className="flex flex-wrap gap-2">
                                                 {tags.map((tag, idx) => (
                                                     <span
                                                         key={`${tag}-${idx}`}
-                                                        className={tagPillClass}
+                                                        className="inline-flex items-center px-2.5 py-0.5 bg-[var(--swiss-off-white)] text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full text-xs font-medium hover:bg-[var(--swiss-cream)] hover:border-[var(--swiss-text-muted)] transition-all"
                                                     >
                                                         #{tag}
-                                                        <button onClick={() => removeTag(tag)} className="ml-1.5 hover:text-red-400 transition-colors">
+                                                        <button onClick={() => removeTag(tag)} className="ml-1.5 hover:text-[var(--swiss-red)] transition-colors">
                                                             <X className="h-3 w-3" />
                                                         </button>
                                                     </span>
                                                 ))}
                                                 {/* Persistent tag input at the end of the list */}
                                                 <div className="relative flex items-center">
-                                                    <Plus className="absolute left-3 h-3 w-3 text-gray-500 pointer-events-none" />
+                                                    <Plus className="absolute left-3 h-3 w-3 text-[var(--swiss-text-muted)] pointer-events-none" />
                                                     <input
                                                         type="text"
-                                                        className="bg-slate-800/30 border border-dashed border-white/20 rounded-full pl-8 pr-4 py-1 text-xs text-white w-32 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 focus:bg-slate-800/50 placeholder:text-gray-500 transition-all"
+                                                        className="bg-[var(--swiss-off-white)] border border-dashed border-[var(--swiss-border)] rounded-full pl-8 pr-4 py-1 text-xs text-[var(--swiss-black)] w-32 focus:outline-none focus:ring-1 focus:ring-[var(--swiss-black)] focus:border-[var(--swiss-text-secondary)] placeholder:text-[var(--swiss-text-muted)] transition-all"
                                                         placeholder="Add tag..."
                                                         value={newTagValue}
                                                         onChange={(e) => setNewTagValue(e.target.value)}
@@ -437,10 +416,10 @@ export default function NewItemPage() {
                                         </div>
 
                                         {/* Full Length Description */}
-                                        <div className="bg-slate-800/30 rounded-xl p-4 border border-white/5 shadow-inner focus-within:border-indigo-500/30 transition-all">
-                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Description</label>
+                                        <div className="bg-[var(--swiss-off-white)] rounded-lg p-4 border border-[var(--swiss-border)]">
+                                            <label className="block text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest mb-2">Description</label>
                                             <textarea
-                                                className="w-full bg-transparent border-none focus:ring-0 p-0 text-gray-300 leading-relaxed resize-none overflow-hidden min-h-[100px]"
+                                                className="w-full bg-transparent border-none focus:ring-0 p-0 text-[var(--swiss-text)] leading-relaxed resize-none overflow-hidden min-h-[100px]"
                                                 value={description}
                                                 onChange={(e) => setDescription(e.target.value)}
                                                 placeholder="Tell us everything about this..."
@@ -454,20 +433,20 @@ export default function NewItemPage() {
 
                                         {/* Links & metadata */}
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="flex items-center gap-3 bg-slate-800/30 border border-white/5 px-4 py-3 rounded-xl group hover:border-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
-                                                <LinkIcon className="h-4 w-4 text-indigo-400 shrink-0" />
+                                            <div className="flex items-center gap-3 bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] px-4 py-3 rounded-lg group hover:border-[var(--swiss-text-muted)] focus-within:border-[var(--swiss-black)] transition-all">
+                                                <LinkIcon className="h-4 w-4 text-[var(--swiss-text-secondary)] shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Website</label>
+                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-[var(--swiss-text-muted)] mb-0.5">Website</label>
                                                     <div className="flex items-center gap-2">
                                                         <input
                                                             type="text"
-                                                            className="bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-200 placeholder-gray-600 w-full truncate"
+                                                            className="bg-transparent border-none focus:ring-0 p-0 text-sm text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)] w-full truncate"
                                                             value={itemLink}
                                                             onChange={(e) => setItemLink(e.target.value)}
                                                             placeholder="https://..."
                                                         />
                                                         {itemLink && (
-                                                            <a href={itemLink} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1 hover:text-indigo-400 text-gray-500 transition-colors">
+                                                            <a href={itemLink} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1 hover:text-[var(--swiss-black)] text-[var(--swiss-text-muted)] transition-colors">
                                                                 <ExternalLink className="h-3.5 w-3.5" />
                                                             </a>
                                                         )}
@@ -475,13 +454,13 @@ export default function NewItemPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-3 bg-slate-800/30 border border-white/5 px-4 py-3 rounded-xl group hover:border-indigo-500/20 focus-within:border-indigo-500/50 transition-all">
-                                                <MapPin className="h-4 w-4 text-indigo-400 shrink-0" />
+                                            <div className="flex items-center gap-3 bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] px-4 py-3 rounded-lg group hover:border-[var(--swiss-text-muted)] focus-within:border-[var(--swiss-black)] transition-all">
+                                                <MapPin className="h-4 w-4 text-[var(--swiss-text-secondary)] shrink-0" />
                                                 <div className="flex-1 min-w-0">
-                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-500 mb-0.5">Location</label>
+                                                    <label className="block text-[9px] font-bold uppercase tracking-widest text-[var(--swiss-text-muted)] mb-0.5">Location</label>
                                                     <input
                                                         type="text"
-                                                        className="bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-200 placeholder-gray-600 w-full truncate"
+                                                        className="bg-transparent border-none focus:ring-0 p-0 text-sm text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)] w-full truncate"
                                                         value={location}
                                                         onChange={(e) => setLocation(e.target.value)}
                                                         placeholder="Add location..."
@@ -493,10 +472,10 @@ export default function NewItemPage() {
                                 </div>
 
                                 {/* Footer bar */}
-                                <div className="p-6 bg-slate-800/20 border-t border-white/5 flex justify-between items-center sm:px-10">
+                                <div className="p-6 bg-[var(--swiss-off-white)] border-t border-[var(--swiss-border)] flex justify-between items-center sm:px-10">
                                     <div className="flex items-center gap-3">
-                                        <div className={`h-1.5 w-1.5 rounded-full ${isSaving ? 'bg-indigo-500 animate-pulse' : 'bg-green-500'}`} />
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none">
+                                        <div className={`h-1.5 w-1.5 rounded-full ${isSaving ? 'bg-[var(--swiss-text-muted)] animate-pulse' : 'bg-[var(--swiss-green)]'}`} />
+                                        <span className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest leading-none">
                                             {isSaving ? 'Saving Changes...' : 'All changes saved'}
                                         </span>
                                     </div>
@@ -521,7 +500,7 @@ export default function NewItemPage() {
                                         setItemLink("");
                                         setLocation("");
                                     }}
-                                    className="text-gray-500 hover:text-indigo-400 text-sm font-bold transition-all uppercase tracking-widest p-2"
+                                    className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2"
                                 >
                                     + Add another item
                                 </button>
@@ -533,44 +512,44 @@ export default function NewItemPage() {
                 {/* Candidate Selection Modal */}
                 <AnimatePresence>
                     {showCandidateModal && (
-                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50">
                             <motion.div
                                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                                className="bg-slate-900 rounded-2xl shadow-2xl border border-white/10 max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden"
+                                className="bg-white rounded-lg shadow-xl border border-[var(--swiss-border)] max-w-xl w-full max-h-[85vh] flex flex-col overflow-hidden"
                             >
-                                <div className="p-6 border-b border-white/10 bg-slate-800/30">
-                                    <h3 className="text-xl font-bold text-white mb-1">Did you mean...</h3>
-                                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Select the closest match</p>
+                                <div className="p-6 border-b border-[var(--swiss-border)] bg-[var(--swiss-off-white)]">
+                                    <h3 className="text-xl font-bold text-[var(--swiss-black)] mb-1">Did you mean...</h3>
+                                    <p className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">Select the closest match</p>
                                 </div>
                                 <div className="overflow-y-auto p-4 space-y-3 flex-1">
                                     {candidates.map((candidate) => (
                                         <button
                                             key={candidate.id}
                                             onClick={() => enrichItem(title, candidate.id, candidate.imageUrl, candidate.internalType || candidate.type)}
-                                            className="w-full text-left p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-indigo-500/50 transition-all flex gap-4 items-start group"
+                                            className="w-full text-left p-4 rounded-lg border border-[var(--swiss-border)] bg-white hover:bg-[var(--swiss-off-white)] hover:border-[var(--swiss-black)] transition-all flex gap-4 items-start group"
                                         >
-                                            <div className="w-20 h-20 bg-slate-800 rounded-lg overflow-hidden shrink-0 border border-white/10 shadow-lg group-hover:border-indigo-500/30 transition-colors">
+                                            <div className="w-20 h-20 bg-[var(--swiss-off-white)] rounded-lg overflow-hidden shrink-0 border border-[var(--swiss-border)] group-hover:border-[var(--swiss-text-muted)] transition-colors">
                                                 <SafeImage src={candidate.imageUrl} alt="" className="w-full h-full object-cover" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-bold text-lg text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
+                                                <div className="font-bold text-lg text-[var(--swiss-black)] group-hover:text-[var(--swiss-text-secondary)] transition-colors line-clamp-1">
                                                     {candidate.name}
                                                 </div>
-                                                <div className="text-[8px] uppercase font-bold text-indigo-500 mt-0.5 tracking-widest bg-indigo-500/10 px-2 py-0.5 rounded inline-block">
+                                                <div className="text-[8px] uppercase font-bold text-[var(--swiss-text-muted)] mt-0.5 tracking-widest bg-[var(--swiss-off-white)] px-2 py-0.5 rounded inline-block">
                                                     {candidate.type}
                                                 </div>
-                                                <div className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                                                <div className="text-sm text-[var(--swiss-text-secondary)] mt-2 line-clamp-2 leading-relaxed">
                                                     {candidate.detailedDescription || candidate.description}
                                                 </div>
                                             </div>
                                         </button>
                                     ))}
                                 </div>
-                                <div className="p-4 border-t border-white/10 bg-slate-800/30 flex justify-between items-center sm:px-6">
-                                    <button onClick={() => setShowCandidateModal(false)} className="text-sm font-bold text-gray-500 hover:text-white transition-colors">CANCEL</button>
-                                    <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Powered by Gemini & Search</p>
+                                <div className="p-4 border-t border-[var(--swiss-border)] bg-[var(--swiss-off-white)] flex justify-between items-center sm:px-6">
+                                    <button onClick={() => setShowCandidateModal(false)} className="text-sm font-bold text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors">CANCEL</button>
+                                    <p className="text-[9px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">Powered by Gemini & Search</p>
                                 </div>
                             </motion.div>
                         </div>

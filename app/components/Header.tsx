@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { useState } from "react";
-import { Menu } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, Database, Clock } from "lucide-react";
 
 interface HeaderProps {
     variant?: "dashboard" | "page";
@@ -30,6 +30,27 @@ export function Header({
     const { data: session } = useSession();
     const router = useRouter();
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [stats, setStats] = useState<{ totalItems: number; lastUpdated: string | null } | null>(null);
+
+    useEffect(() => {
+        if (showUserMenu && session?.user) {
+            fetch("/api/user/stats")
+                .then(res => res.json())
+                .then(data => setStats(data))
+                .catch(err => console.error("Error fetching user stats:", err));
+        }
+    }, [showUserMenu, session?.user]);
+
+    const formatTimestamp = (timestamp: string | null) => {
+        if (!timestamp) return "Never";
+        const date = new Date(timestamp);
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        const hh = String(date.getHours()).padStart(2, '0');
+        const min = String(date.getMinutes()).padStart(2, '0');
+        return `${mm}/${dd}/${yyyy} ${hh}:${min}`;
+    };
 
     const handleLogout = async () => {
         await signOut({ redirect: true, callbackUrl: "/login" });
@@ -157,6 +178,32 @@ export function Header({
                                             </svg>
                                             Settings
                                         </Link>
+
+                                        {stats && (
+                                            <div className="px-4 py-3 border-t border-[var(--swiss-border)] bg-[var(--swiss-off-white)]/50">
+                                                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--swiss-text-muted)] font-bold mb-2">
+                                                    Account Stats
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-1.5 text-xs text-[var(--swiss-text)]">
+                                                            <Database className="h-3 w-3 text-[var(--swiss-text-muted)]" />
+                                                            <span>Total Items</span>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-[var(--swiss-black)]">{stats.totalItems}</span>
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className="flex items-center gap-1.5 text-xs text-[var(--swiss-text)]">
+                                                            <Clock className="h-3 w-3 text-[var(--swiss-text-muted)]" />
+                                                            <span>Last Updated</span>
+                                                        </div>
+                                                        <div className="text-[10px] font-medium text-[var(--swiss-text-muted)] pl-4.5">
+                                                            {formatTimestamp(stats.lastUpdated)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <button
                                             onClick={handleLogout}

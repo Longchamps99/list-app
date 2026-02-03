@@ -126,7 +126,7 @@ export default function SmartPastePage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+        <div className="min-h-screen bg-white text-[var(--swiss-black)] flex flex-col">
             <Header variant="page" title="Smart Paste" showBack={true} backHref="/dashboard" />
 
             <main className="flex-1 max-w-4xl mx-auto w-full p-6">
@@ -140,44 +140,31 @@ export default function SmartPastePage() {
                             className="space-y-6"
                         >
                             <div className="text-center mb-12">
-                                <span className="inline-flex items-center justify-center p-4 bg-indigo-500/10 rounded-full mb-6 ring-2 ring-indigo-500/20 shadow-xl shadow-indigo-500/10">
-                                    <Sparkles className="h-8 w-8 text-indigo-400" />
+                                <span className="inline-flex items-center justify-center p-4 bg-[var(--swiss-off-white)] rounded-full mb-6 border border-[var(--swiss-border)]">
+                                    <Sparkles className="h-8 w-8 text-[var(--swiss-text-secondary)]" />
                                 </span>
-                                <h1 className="text-4xl font-bold mb-4 text-white tracking-tight">Smart Paste</h1>
-                                <p className="text-lg text-gray-400 max-w-xl mx-auto leading-relaxed">
+                                <h1 className="text-4xl font-bold mb-4 text-[var(--swiss-black)] tracking-tight">Smart Paste</h1>
+                                <p className="text-lg text-[var(--swiss-text-muted)] max-w-xl mx-auto leading-relaxed">
                                     Copy valid text from your Notes, Excel, or Docs. We&apos;ll clean it up and automatically enrich it using Gemini AI.
                                 </p>
                             </div>
 
                             <div className="relative group">
                                 <motion.div
-                                    animate={{
-                                        boxShadow: [
-                                            "0 0 0px 0px rgba(99, 102, 241, 0)",
-                                            "0 0 30px 4px rgba(99, 102, 241, 0.4)",
-                                            "0 0 0px 0px rgba(99, 102, 241, 0)"
-                                        ],
-                                        borderColor: ["rgba(255,255,255,0.1)", "rgba(99, 102, 241, 0.5)", "rgba(255,255,255,0.1)"]
-                                    }}
-                                    transition={{
-                                        duration: 3,
-                                        repeat: Infinity,
-                                        ease: "easeInOut"
-                                    }}
-                                    className="relative bg-slate-800/50 backdrop-blur-xl border-2 rounded-2xl overflow-hidden p-1 transition-all hover:border-indigo-500/50 shadow-2xl"
+                                    className="relative bg-white border-2 border-[var(--swiss-border)] rounded-lg overflow-hidden p-1 transition-all hover:border-[var(--swiss-black)]"
                                 >
                                     <textarea
                                         autoFocus
-                                        className="w-full h-80 bg-transparent border-none p-8 text-lg placeholder-gray-600 focus:ring-0 transition-all font-mono resize-none appearance-none outline-none text-white"
+                                        className="w-full h-80 bg-transparent border-none p-8 text-lg placeholder-[var(--swiss-text-muted)] focus:ring-0 transition-all font-mono resize-none appearance-none outline-none text-[var(--swiss-black)]"
                                         placeholder={`1. The Matrix\n2. Inception\n3. Interstellar\n...`}
                                         value={rawText}
                                         onChange={(e) => setRawText(e.target.value)}
                                     />
-                                    <div className="absolute bottom-6 right-6 text-xs font-bold text-indigo-400/60 uppercase tracking-widest">
+                                    <div className="absolute bottom-6 right-6 text-xs font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">
                                         {rawText.split(/\n/).filter(l => l.trim()).length} Items Detected
                                     </div>
                                 </motion.div>
-                                <p className="text-center mt-6 text-indigo-400/60 font-medium animate-pulse text-xs tracking-widest uppercase">
+                                <p className="text-center mt-6 text-[var(--swiss-text-muted)] font-medium text-xs tracking-widest uppercase">
                                     AI-powered list detection active
                                 </p>
                             </div>
@@ -185,7 +172,7 @@ export default function SmartPastePage() {
                             <button
                                 onClick={handleProcess}
                                 disabled={!rawText.trim() || isProcessing}
-                                className={`${primaryButtonClass} w-full py-5 text-lg flex items-center justify-center gap-3 rounded-2xl`}
+                                className={`${primaryButtonClass} w-full py-5 text-lg flex items-center justify-center gap-3 rounded-lg`}
                             >
                                 {isProcessing ? (
                                     <>
@@ -208,8 +195,8 @@ export default function SmartPastePage() {
                         >
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h2 className="text-2xl font-bold">Review & Save</h2>
-                                    <p className="text-gray-400 text-sm">Found {parsedItems.length} items</p>
+                                    <h2 className="text-2xl font-bold text-[var(--swiss-black)]">Review & Save</h2>
+                                    <p className="text-[var(--swiss-text-muted)] text-sm">Found {parsedItems.length} items</p>
                                 </div>
                                 <button
                                     onClick={() => setStep("input")}
@@ -221,14 +208,14 @@ export default function SmartPastePage() {
 
                             <div className="space-y-4">
                                 {parsedItems.map((item) => (
-                                    <div key={item.id} className={`${cardClass} flex gap-6 p-6 group relative`}>
+                                    <div key={item.id} className="bg-white border border-[var(--swiss-border)] rounded-lg flex gap-6 p-6 group relative hover:border-[var(--swiss-black)] transition-all">
                                         {/* Image Preview */}
-                                        <div className="w-24 h-24 sm:w-28 sm:h-28 bg-slate-800 rounded-xl flex-shrink-0 overflow-hidden border-2 border-indigo-500/20 shadow-lg relative">
+                                        <div className="w-24 h-24 sm:w-28 sm:h-28 bg-[var(--swiss-off-white)] rounded-lg flex-shrink-0 overflow-hidden border border-[var(--swiss-border)] relative">
                                             <SafeImage
                                                 src={item.imageUrl}
                                                 alt={item.title}
                                                 className="w-full h-full object-cover"
-                                                fallback={<ImageIcon className="h-10 w-10 text-gray-600" />}
+                                                fallback={<ImageIcon className="h-10 w-10 text-[var(--swiss-text-muted)]" />}
                                             />
                                         </div>
 
@@ -237,17 +224,17 @@ export default function SmartPastePage() {
                                                 <input
                                                     value={item.title}
                                                     onChange={(e) => handleUpdateItem(item.id, { title: e.target.value })}
-                                                    className="flex-1 bg-transparent border-none focus:ring-1 focus:ring-indigo-500/20 rounded-md p-1 -ml-1 text-xl font-bold text-white placeholder-white/10 transition-all"
+                                                    className="flex-1 bg-transparent border-b border-[var(--swiss-border)] focus:border-[var(--swiss-black)] focus:outline-none p-1 -ml-1 text-xl font-bold text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)] transition-all"
                                                     placeholder="Item Title"
                                                 />
                                             </div>
 
-                                            <div className="bg-slate-800/30 rounded-lg p-3 border border-white/5 shadow-inner focus-within:border-indigo-500/30 transition-all">
-                                                <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1">Description</label>
+                                            <div className="bg-[var(--swiss-off-white)] rounded-lg p-3 border border-[var(--swiss-border)]">
+                                                <label className="block text-[9px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest mb-1">Description</label>
                                                 <textarea
                                                     value={item.description || ""}
                                                     onChange={(e) => handleUpdateItem(item.id, { description: e.target.value })}
-                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-gray-300 leading-relaxed resize-none overflow-hidden min-h-[60px]"
+                                                    className="w-full bg-transparent border-none focus:ring-0 p-0 text-sm text-[var(--swiss-text-secondary)] leading-relaxed resize-none overflow-hidden min-h-[60px]"
                                                     rows={2}
                                                     placeholder="Add a description..."
                                                     onInput={(e) => {
@@ -261,11 +248,11 @@ export default function SmartPastePage() {
                                             {/* Tags Input Display */}
                                             <div className="flex flex-wrap gap-2 items-center">
                                                 {item.tags.map((tag, i) => (
-                                                    <span key={i} className={tagPillClass}>
+                                                    <span key={i} className="bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 px-3 py-1 rounded-full text-xs font-medium flex items-center">
                                                         #{tag}
                                                         <button
                                                             onClick={() => handleUpdateItem(item.id, { tags: item.tags.filter((_, idx) => idx !== i) })}
-                                                            className="ml-1.5 hover:text-red-400 transition-colors"
+                                                            className="ml-1.5 hover:text-[var(--swiss-red)] transition-colors"
                                                             title="Remove tag"
                                                         >
                                                             <X className="h-3 w-3" />
@@ -273,10 +260,10 @@ export default function SmartPastePage() {
                                                     </span>
                                                 ))}
                                                 <div className="relative flex items-center">
-                                                    <Plus className="absolute left-3 h-3 w-3 text-gray-500 pointer-events-none" />
+                                                    <Plus className="absolute left-3 h-3 w-3 text-[var(--swiss-text-muted)] pointer-events-none" />
                                                     <input
                                                         type="text"
-                                                        className="bg-slate-800/30 border border-dashed border-white/20 rounded-full pl-8 pr-4 py-1 text-[10px] text-white w-28 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500/50 focus:bg-slate-800/50 placeholder:text-gray-500 transition-all font-bold uppercase"
+                                                        className="bg-[var(--swiss-off-white)] border border-dashed border-[var(--swiss-border)] rounded-full pl-8 pr-4 py-1 text-[10px] text-[var(--swiss-black)] w-28 focus:outline-none focus:ring-1 focus:ring-[var(--swiss-black)] focus:border-[var(--swiss-text-muted)] placeholder:text-[var(--swiss-text-muted)] transition-all font-bold uppercase"
                                                         placeholder="Tag"
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
@@ -293,7 +280,7 @@ export default function SmartPastePage() {
                                         </div>
                                         <button
                                             onClick={() => handleDeleteItem(item.id)}
-                                            className="text-gray-600 hover:text-red-400 transition-colors self-start p-2 hover:bg-red-500/10 rounded-lg"
+                                            className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors self-start p-2 hover:bg-[var(--swiss-red-light)] rounded-lg"
                                             title="Remove Item"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -305,7 +292,7 @@ export default function SmartPastePage() {
                             <button
                                 onClick={handleSaveAll}
                                 disabled={parsedItems.length === 0 || isSaving}
-                                className={`${primaryButtonClass} sticky bottom-6 w-full py-5 text-lg flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 shadow-green-500/20 hover:from-green-500 hover:to-emerald-500`}
+                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] transition-all sticky bottom-6 w-full py-5 text-lg flex items-center justify-center gap-3 rounded-lg font-bold"
                             >
                                 {isSaving ? (
                                     <>

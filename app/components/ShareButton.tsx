@@ -56,7 +56,7 @@ export function ShareButton({ type, id, title, className = "" }: ShareButtonProp
         <button
             onClick={handleShare}
             disabled={loading}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 ${className}`}
+            className={className || "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--swiss-text-secondary)] bg-white border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all disabled:opacity-50"}
         >
             {loading ? (
                 <span className="animate-spin">⌛</span>

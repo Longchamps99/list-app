@@ -280,7 +280,10 @@ function SmartListContent() {
             } else if (sort === "alpha") {
                 return (a.title || "").localeCompare(b.title || "");
             }
-            return 0; // "rank" keeps original order
+            // For "rank" - actually compare by rank values
+            const rankA = a.ranks?.[0]?.rank || '0|zzzzzz:';
+            const rankB = b.ranks?.[0]?.rank || '0|zzzzzz:';
+            return rankA.localeCompare(rankB);
         });
 
     return (
@@ -299,30 +302,24 @@ function SmartListContent() {
                         <button
                             onClick={saveList}
                             disabled={saving}
-                            className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-500 hover:to-purple-500 hover:-translate-y-0.5 transition-all font-semibold text-sm shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 disabled:opacity-50 disabled:hover:translate-y-0"
+                            className="px-6 py-2.5 bg-[var(--swiss-black)] text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-all font-semibold text-sm disabled:opacity-50"
                         >
                             {saving ? "Saving..." : "Save List"}
                         </button>
                     )}
                 </div>
             </Header>
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col relative overflow-hidden">
-                {/* Background Effects */}
-                <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-                </div>
-
+            <div className="min-h-screen bg-white flex flex-col">
                 {/* Tag Filters Bar */}
-                <div className="bg-slate-900/50 backdrop-blur-xl border-b border-white/10 relative z-30">
+                <div className="bg-[var(--swiss-off-white)] border-b border-[var(--swiss-border)]">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap gap-2 items-center">
-                        <span className="text-sm text-gray-400 mr-2">Filters:</span>
+                        <span className="text-sm text-[var(--swiss-text-muted)] mr-2">Filters:</span>
                         {matchingTags.map(tag => (
-                            <span key={tag.id} className="bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                            <span key={tag.id} className="bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
                                 #{tag.name}
                                 <button
                                     onClick={() => removeTagFilter(tag.name)}
-                                    className="hover:text-green-200 font-bold ml-1 w-4 h-4 flex items-center justify-center rounded-full hover:bg-green-500/30"
+                                    className="hover:text-[var(--swiss-green)] font-bold ml-1 w-4 h-4 flex items-center justify-center rounded-full hover:bg-[var(--swiss-green)]/20"
                                 >
                                     ×
                                 </button>
@@ -334,7 +331,7 @@ function SmartListContent() {
                                 <input
                                     type="text"
                                     placeholder="Add tag filter..."
-                                    className="text-sm rounded-l-md bg-slate-800/50 border-white/10 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-1.5 border w-32 md:w-48 text-white placeholder-gray-500"
+                                    className="text-sm rounded-l-md bg-white border-[var(--swiss-border)] focus:border-[var(--swiss-black)] focus:ring-[var(--swiss-black)] p-1.5 border w-32 md:w-48 text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
                                     value={newTagInput}
                                     onChange={(e) => setNewTagInput(e.target.value)}
                                     onFocus={() => setShowDropdown(true)}
@@ -342,7 +339,7 @@ function SmartListContent() {
                                 />
                                 <button
                                     type="submit"
-                                    className="bg-indigo-600 text-white px-3 py-1.5 rounded-r-md hover:bg-indigo-500 text-sm border border-l-0 border-white/10"
+                                    className="bg-[var(--swiss-black)] text-white px-3 py-1.5 rounded-r-md hover:bg-[var(--swiss-accent-hover)] text-sm border border-l-0 border-[var(--swiss-border)]"
                                 >
                                     +
                                 </button>
@@ -350,7 +347,7 @@ function SmartListContent() {
 
                             {/* Autocomplete Dropdown */}
                             {showDropdown && (
-                                <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-md shadow-2xl shadow-black/50 z-50">
+                                <div className="absolute top-full left-0 mt-1 w-48 max-h-48 overflow-y-auto bg-white border border-[var(--swiss-border)] rounded-md shadow-lg z-50">
                                     {allTags
                                         .filter(tag => {
                                             const currentTags = tagsParam ? tagsParam.split(",") : [];
@@ -364,7 +361,7 @@ function SmartListContent() {
                                             <button
                                                 key={tag.id}
                                                 type="button"
-                                                className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition"
+                                                className="w-full text-left px-3 py-2 text-sm text-[var(--swiss-text)] hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] transition"
                                                 onMouseDown={(e) => {
                                                     e.preventDefault();
                                                     setNewTagInput(tag.name);
@@ -389,7 +386,7 @@ function SmartListContent() {
                                         }
                                         return true;
                                     }).length === 0 && (
-                                            <div className="px-3 py-2 text-sm text-gray-400">
+                                            <div className="px-3 py-2 text-sm text-[var(--swiss-text-muted)]">
                                                 {newTagInput.trim() ? "No matching tags" : "No tags available"}
                                             </div>
                                         )}
@@ -399,26 +396,26 @@ function SmartListContent() {
                     </div>
                 </div>
                 {/* Content */}
-                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0 relative z-10">
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
                     {/* Controls Bar */}
                     <div className="mb-6 flex items-center justify-between">
                         {/* Search Bar */}
                         <div className="flex-1 max-w-2xl relative mr-6">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
                                 <input
                                     type="text"
                                     placeholder="Search items..."
-                                    className="w-full pl-10 pr-20 py-2.5 bg-slate-800/50 border border-white/10 rounded-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm text-white placeholder-gray-500"
+                                    className="w-full pl-10 pr-20 py-2.5 bg-white border border-[var(--swiss-border)] rounded-lg focus:border-[var(--swiss-black)] focus:outline-none focus:ring-2 focus:ring-[var(--swiss-black)]/20 transition-all text-sm text-[var(--swiss-black)] placeholder-[var(--swiss-text-muted)]"
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
                                 <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-gray-400 bg-slate-700/50 border border-white/10 rounded">
+                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
                                         ⌘K
                                     </kbd>
                                 </div>
@@ -430,7 +427,7 @@ function SmartListContent() {
                             {/* Add New Item Button */}
                             <Link
                                 href="/items/new"
-                                className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 !text-white rounded-lg hover:from-green-500 hover:to-emerald-500 hover:-translate-y-0.5 transition-all font-bold text-sm shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
+                                className="flex items-center gap-2 px-6 py-2.5 bg-[var(--swiss-black)] !text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-all font-bold text-sm"
                             >
                                 <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -439,12 +436,12 @@ function SmartListContent() {
                             </Link>
 
                             {/* View and Sort Controls - Grouped */}
-                            <div className="flex items-center gap-3 border border-white/10 rounded-lg p-1 bg-slate-800/50 backdrop-blur-sm">
+                            <div className="flex items-center gap-3 border border-[var(--swiss-border)] rounded-lg p-1 bg-white">
                                 {/* View Toggle */}
-                                <div className="flex items-center gap-1 border-r border-white/10 pr-3">
+                                <div className="flex items-center gap-1 border-r border-[var(--swiss-border)] pr-3">
                                     <button
                                         onClick={() => setViewMode("grid")}
-                                        className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                                        className={`p-2 rounded transition-colors ${viewMode === "grid" ? "bg-[var(--swiss-black)] text-white" : "text-[var(--swiss-text-muted)] hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)]"}`}
                                         title="Grid view"
                                     >
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -453,7 +450,7 @@ function SmartListContent() {
                                     </button>
                                     <button
                                         onClick={() => setViewMode("list")}
-                                        className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-indigo-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                                        className={`p-2 rounded transition-colors ${viewMode === "list" ? "bg-[var(--swiss-black)] text-white" : "text-[var(--swiss-text-muted)] hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)]"}`}
                                         title="List view"
                                     >
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -464,9 +461,9 @@ function SmartListContent() {
 
                                 {/* Sort Dropdown */}
                                 <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-gray-400 font-medium">Sort:</span>
+                                    <span className="text-[var(--swiss-text-muted)] font-medium">Sort:</span>
                                     <select
-                                        className="border-0 focus:ring-0 text-sm font-medium text-white bg-transparent cursor-pointer pr-8"
+                                        className="border-0 focus:ring-0 text-sm font-medium text-[var(--swiss-black)] bg-transparent cursor-pointer pr-8"
                                         value={sort}
                                         onChange={(e) => setSort(e.target.value)}
                                     >
@@ -479,9 +476,9 @@ function SmartListContent() {
                         </div>
                     </div>
                     {loading ? (
-                        <div className="text-center py-12 text-gray-400">Loading preview...</div>
+                        <div className="text-center py-12 text-[var(--swiss-text-muted)]">Loading preview...</div>
                     ) : filteredItems.length === 0 ? (
-                        <div className="text-center py-12 text-gray-400 bg-slate-900/50 backdrop-blur-xl rounded-lg shadow-2xl shadow-black/20 p-8 border border-white/10">
+                        <div className="text-center py-12 text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] rounded-lg p-8 border border-[var(--swiss-border)]">
                             <p className="text-lg mb-2">No items found.</p>
                             <p className="text-sm">Try using different search terms or filters.</p>
                         </div>
@@ -498,14 +495,14 @@ function SmartListContent() {
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragProps: any) => (
-                                                <div className="bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 p-4 flex items-center gap-6 group hover:shadow-indigo-500/20 transition-all border border-white/10 hover:border-indigo-500/30 relative h-full">
+                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-4 flex items-center gap-6 group hover:border-[var(--swiss-black)] transition-all h-full">
                                                     {/* Drag Handle */}
                                                     <div
                                                         {...dragProps}
-                                                        className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/5"
+                                                        className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-[var(--swiss-off-white)]"
                                                         title="Drag to reorder"
                                                     >
-                                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                                                         </svg>
                                                     </div>
@@ -513,7 +510,7 @@ function SmartListContent() {
                                                     {/* Image */}
                                                     <Link href={`/items/${item.id}`} className="flex-shrink-0">
                                                         {item.imageUrl ? (
-                                                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 relative">
+                                                            <div className="w-24 h-24 rounded-lg overflow-hidden border border-[var(--swiss-border)] relative">
                                                                 <img
                                                                     src={item.imageUrl}
                                                                     alt={item.title || "Item"}
@@ -522,7 +519,7 @@ function SmartListContent() {
                                                                 />
                                                             </div>
                                                         ) : (
-                                                            <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center text-gray-500 text-xs border-2 border-white/10 shadow-sm">
+                                                            <div className="w-24 h-24 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs border border-[var(--swiss-border)]">
                                                                 No Img
                                                             </div>
                                                         )}
@@ -531,17 +528,17 @@ function SmartListContent() {
                                                     {/* Content */}
                                                     <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30 leading-none">
+                                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--swiss-black)] text-white flex items-center justify-center font-bold text-sm leading-none">
                                                                 #{index + 1}
                                                             </div>
                                                             <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
-                                                                <h3 className="font-bold text-xl text-white hover:text-indigo-400 transition truncate">
+                                                                <h3 className="font-bold text-xl text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
                                                                     {item.title || "Untitled"}
                                                                 </h3>
                                                             </Link>
                                                         </div>
 
-                                                        <p className="text-gray-400 text-sm line-clamp-1">{item.content}</p>
+                                                        <p className="text-[var(--swiss-text-secondary)] text-sm line-clamp-1">{item.content}</p>
 
                                                         {item.tags.length > 0 && (
                                                             <div className="flex flex-wrap gap-2 mt-1">
@@ -549,13 +546,13 @@ function SmartListContent() {
                                                                     <button
                                                                         key={tag.id}
                                                                         onClick={() => openSmartList(tag.name)}
-                                                                        className="inline-block px-3 py-1 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-xs font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
+                                                                        className="inline-block px-3 py-1 bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 rounded-full text-xs font-medium hover:bg-[var(--swiss-green)]/10 hover:border-[var(--swiss-green)] transition-all cursor-pointer"
                                                                     >
                                                                         #{tag.name}
                                                                     </button>
                                                                 ))}
                                                                 {item.tags.length > 4 && (
-                                                                    <span className="text-xs text-gray-400 self-center">+{item.tags.length - 4}</span>
+                                                                    <span className="text-xs text-[var(--swiss-text-muted)] self-center">+{item.tags.length - 4}</span>
                                                                 )}
                                                             </div>
                                                         )}
@@ -566,7 +563,7 @@ function SmartListContent() {
                                                                 type="ITEM"
                                                                 id={item.id}
                                                                 title={item.title || "Item"}
-                                                                className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0 shadow-sm"
+                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0"
                                                             />
 
                                                             <button
@@ -581,7 +578,7 @@ function SmartListContent() {
                                                                         }
                                                                     }
                                                                 }}
-                                                                className="p-1.5 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
+                                                                className="p-1.5 rounded border border-[var(--swiss-red)] text-[var(--swiss-red)] hover:bg-[var(--swiss-red-light)] transition-colors"
                                                                 title="Delete item"
                                                             >
                                                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -589,10 +586,10 @@ function SmartListContent() {
                                                                 </svg>
                                                             </button>
 
-                                                            <span className="text-xs text-gray-400 ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                            <span className="text-xs text-[var(--swiss-text-muted)] ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                             {item.shares?.length > 0 && (
-                                                                <div className="ml-auto text-[#4f46e5] font-medium text-sm flex items-center gap-1">
+                                                                <div className="ml-auto text-[var(--swiss-text-secondary)] font-medium text-sm flex items-center gap-1">
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
                                                                         <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
                                                                     </svg>
@@ -609,84 +606,108 @@ function SmartListContent() {
                             </SortableContext>
                         </DndContext>
                     ) : (
-                        /* List View */
-                        <div className="space-y-2">
-                            {filteredItems.map((item, index) => (
-                                <div key={item.id} className="bg-slate-900/50 backdrop-blur-xl rounded-lg shadow-sm border border-white/10 p-3 flex flex-col gap-2 group hover:border-indigo-500/30 transition-all relative">
-                                    <div className="flex items-center gap-3">
-                                        {/* Rank Badge */}
-                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-lg shadow-indigo-500/30 leading-none">
-                                            #{index + 1}
-                                        </div>
+                        /* List View with Drag and Drop */
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                                <div className="space-y-2">
+                                    {filteredItems.map((item, index) => (
+                                        <SortableItem key={item.id} id={item.id}>
+                                            {(dragProps: any) => (
+                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 flex flex-col gap-2 group hover:border-[var(--swiss-black)] transition-all relative">
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Drag Handle */}
+                                                        <div
+                                                            {...dragProps}
+                                                            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-[var(--swiss-off-white)]"
+                                                            title="Drag to reorder"
+                                                        >
+                                                            <svg className="h-4 w-4 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                            </svg>
+                                                        </div>
 
-                                        {/* Title */}
-                                        <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
-                                            <h3 className="font-bold text-white hover:text-indigo-400 transition truncate text-sm">
-                                                {item.title || "Untitled"}
-                                            </h3>
-                                        </Link>
+                                                        {/* Rank Badge */}
+                                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--swiss-black)] text-white flex items-center justify-center font-bold text-xs leading-none">
+                                                            #{index + 1}
+                                                        </div>
 
-                                        {/* Actions & Metadata */}
-                                        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                                            <span className="text-xs text-gray-500 whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                        {/* Title */}
+                                                        <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
+                                                            <h3 className="font-bold text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate text-sm">
+                                                                {item.title || "Untitled"}
+                                                            </h3>
+                                                        </Link>
 
-                                            {item.shares?.length > 0 && (
-                                                <div className="text-[#4f46e5] font-medium text-xs flex items-center gap-1" title="Shared">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
-                                                    </svg>
+                                                        {/* Actions & Metadata */}
+                                                        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                                                            <span className="text-xs text-[var(--swiss-text-muted)] whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
+
+                                                            {item.shares?.length > 0 && (
+                                                                <div className="text-[var(--swiss-text-secondary)] font-medium text-xs flex items-center gap-1" title="Shared">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                </div>
+                                                            )}
+
+                                                            <ShareButton
+                                                                type="ITEM"
+                                                                id={item.id}
+                                                                title={item.title || "Item"}
+                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-3 py-1 rounded-full text-xs font-medium transition-colors border-0"
+                                                            />
+
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.preventDefault();
+                                                                    if (confirm("Delete this item?")) {
+                                                                        try {
+                                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
+                                                                            if (res.ok) fetchPreview();
+                                                                        } catch (err) {
+                                                                            console.error(err);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="p-1 rounded border border-[var(--swiss-red)] text-[var(--swiss-red)] hover:bg-[var(--swiss-red-light)] transition-colors"
+                                                                title="Delete item"
+                                                            >
+                                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Bottom Row: Tags (if any) */}
+                                                    {item.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[calc(1.5rem+12px)]">
+                                                            {item.tags.slice(0, 4).map(({ tag }) => (
+                                                                <button
+                                                                    key={tag.id}
+                                                                    onClick={() => openSmartList(tag.name)}
+                                                                    className="inline-block px-2 py-0.5 bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 rounded-full text-[10px] font-medium hover:bg-[var(--swiss-green)]/10 hover:border-[var(--swiss-green)] transition-all cursor-pointer"
+                                                                >
+                                                                    #{tag.name}
+                                                                </button>
+                                                            ))}
+                                                            {item.tags.length > 4 && (
+                                                                <span className="text-[10px] text-[var(--swiss-text-muted)] self-center">+{item.tags.length - 4}</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
-
-                                            <ShareButton
-                                                type="ITEM"
-                                                id={item.id}
-                                                title={item.title || "Item"}
-                                                className="bg-[#2563eb] text-white hover:bg-blue-700 px-3 py-1 rounded-full text-xs font-medium transition-colors border-0 shadow-sm"
-                                            />
-
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    if (confirm("Delete this item?")) {
-                                                        try {
-                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-                                                            if (res.ok) fetchPreview();
-                                                        } catch (err) {
-                                                            console.error(err);
-                                                        }
-                                                    }
-                                                }}
-                                                className="p-1 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
-                                                title="Delete item"
-                                            >
-                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Row: Tags (if any) */}
-                                    {item.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[calc(1.5rem+12px)]">
-                                            {item.tags.slice(0, 4).map(({ tag }) => (
-                                                <button
-                                                    key={tag.id}
-                                                    onClick={() => openSmartList(tag.name)}
-                                                    className="inline-block px-2 py-0.5 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-[10px] font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
-                                                >
-                                                    #{tag.name}
-                                                </button>
-                                            ))}
-                                            {item.tags.length > 4 && (
-                                                <span className="text-[10px] text-gray-400 self-center">+{item.tags.length - 4}</span>
-                                            )}
-                                        </div>
-                                    )}
+                                        </SortableItem>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </SortableContext>
+                        </DndContext>
                     )}
                 </main>
             </div>

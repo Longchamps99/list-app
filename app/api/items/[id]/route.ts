@@ -113,6 +113,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
                 ...(link !== undefined && { link }),
                 ...(location !== undefined && { location }),
                 ...(status !== undefined && { status })
+            },
+            include: {
+                tags: { include: { tag: true } },
+                // @ts-ignore
+                shares: { where: { userId: userId } }
             }
         });
         return NextResponse.json(item);
