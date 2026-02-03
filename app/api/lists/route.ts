@@ -28,7 +28,35 @@ export async function GET() {
             }
         });
 
-        return NextResponse.json(lists);
+        // Calculate item count for each list
+        const listsWithCounts = await Promise.all(
+            lists.map(async (list) => {
+                const tagNames = list.filterTags.map(ft => ft.tag.name.toLowerCase());
+
+                if (tagNames.length === 0) {
+                    return { ...list, itemCount: 0 };
+                }
+
+                const itemCount = await prisma.item.count({
+                    where: {
+                        ownerId: list.ownerId,
+                        AND: tagNames.map(tagName => ({
+                            tags: {
+                                some: {
+                                    tag: {
+                                        name: { equals: tagName, mode: 'insensitive' }
+                                    }
+                                }
+                            }
+                        }))
+                    }
+                });
+
+                return { ...list, itemCount };
+            })
+        );
+
+        return NextResponse.json(listsWithCounts);
     } catch (error) {
         console.error('[Lists API] Error:', error);
         return new NextResponse("Internal Error", { status: 500 });

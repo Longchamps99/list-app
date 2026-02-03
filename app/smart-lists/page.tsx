@@ -3,9 +3,56 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+    DragStartEvent,
+    TouchSensor,
+    MouseSensor
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy,
+    useSortable
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+// @ts-ignore
+import { LexoRank } from "lexorank";
 
 import { ShareButton } from "../components/ShareButton";
 import { Header } from "../components/Header";
+
+function SortableItem({ id, children }: { id: string; children: (props: any) => React.ReactNode }) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 999 : "auto",
+        position: isDragging ? "relative" as const : "static" as const,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="h-full">
+            {children({ ...attributes, ...listeners })}
+        </div>
+    );
+}
 
 interface Tag {
     id: string;
@@ -19,6 +66,7 @@ interface Item {
     content: string;
     imageUrl?: string;
     tags: { tag: Tag }[];
+    ranks: { rank: string }[];
     shares: {
         sharedBy: {
             name: string | null;
@@ -45,6 +93,12 @@ function SmartListContent() {
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("rank");
     const [listTitle, setListTitle] = useState("Smart List Preview");
+    const [contextId, setContextId] = useState<string | null>(null);
+
+    const sensors = useSensors(
+        useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+    );
 
     useEffect(() => {
         fetchPreview();
@@ -71,6 +125,7 @@ function SmartListContent() {
                 const data = await res.json();
                 setItems(data.items);
                 setMatchingTags(data.matchingTags);
+                setContextId(data.contextId);
 
                 // Initialize title based on tags if not successfully set yet
                 if (data.matchingTags.length > 0) {
@@ -82,6 +137,69 @@ function SmartListContent() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        if (typeof navigator !== "undefined" && navigator.vibrate) {
+            navigator.vibrate(10);
+        }
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id || !contextId) return;
+
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+
+        const newItems = arrayMove(items, oldIndex, newIndex);
+
+        // Calculate Rank
+        const prevItem = newItems[newIndex - 1];
+        const nextItem = newItems[newIndex + 1];
+
+        const prevRankStr = prevItem?.ranks?.[0]?.rank || LexoRank.min().toString();
+        const nextRankStr = nextItem?.ranks?.[0]?.rank || LexoRank.max().toString();
+
+        let newRankStr;
+        try {
+            if (prevRankStr === nextRankStr) {
+                const prev = LexoRank.parse(prevRankStr);
+                newRankStr = prev.genNext().toString();
+            } else {
+                const prev = LexoRank.parse(prevRankStr);
+                const next = LexoRank.parse(nextRankStr);
+                newRankStr = prev.between(next).toString();
+            }
+        } catch (e) {
+            console.error("Rank error", e);
+            try {
+                const prev = LexoRank.parse(prevRankStr);
+                newRankStr = prev.genNext().toString();
+            } catch (fallbackErr) {
+                newRankStr = LexoRank.middle().toString();
+            }
+        }
+
+        // Optimistic Update - update the item's rank locally
+        const updatedItem = { ...newItems[newIndex] };
+        if (updatedItem.ranks && updatedItem.ranks.length > 0) {
+            updatedItem.ranks = [{ rank: newRankStr }];
+        } else {
+            updatedItem.ranks = [{ rank: newRankStr }];
+        }
+        newItems[newIndex] = updatedItem;
+        setItems(newItems);
+
+        // API Update
+        await fetch("/api/ranks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contextId: contextId,
+                updates: [{ itemId: active.id, rank: newRankStr }]
+            })
+        });
     };
 
     const addTagFilter = (e: React.FormEvent) => {
@@ -368,104 +486,128 @@ function SmartListContent() {
                             <p className="text-sm">Try using different search terms or filters.</p>
                         </div>
                     ) : viewMode === "grid" ? (
-                        /* Grid View */
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {filteredItems.map((item, index) => (
-                                <div key={item.id} className="bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 p-4 flex items-center gap-6 group hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all border border-white/10 hover:border-indigo-500/30 relative h-full">
-                                    {/* Image */}
-                                    <Link href={`/items/${item.id}`} className="flex-shrink-0">
-                                        {item.imageUrl ? (
-                                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 relative">
-                                                <img
-                                                    src={item.imageUrl}
-                                                    alt={item.title || "Item"}
-                                                    className="w-full h-full object-cover"
-                                                    referrerPolicy="no-referrer"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center text-gray-500 text-xs border-2 border-white/10 shadow-sm">
-                                                No Img
-                                            </div>
-                                        )}
-                                    </Link>
-
-                                    {/* Content */}
-                                    <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30 leading-none">
-                                                #{index + 1}
-                                            </div>
-                                            <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
-                                                <h3 className="font-bold text-xl text-white hover:text-indigo-400 transition truncate">
-                                                    {item.title || "Untitled"}
-                                                </h3>
-                                            </Link>
-                                        </div>
-
-                                        <p className="text-gray-400 text-sm line-clamp-1">{item.content}</p>
-
-                                        {item.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 mt-1">
-                                                {item.tags.slice(0, 4).map(({ tag }) => (
-                                                    <button
-                                                        key={tag.id}
-                                                        onClick={() => openSmartList(tag.name)}
-                                                        className="inline-block px-3 py-1 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-xs font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
+                        /* Grid View with Drag and Drop */
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                        >
+                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {filteredItems.map((item, index) => (
+                                        <SortableItem key={item.id} id={item.id}>
+                                            {(dragProps: any) => (
+                                                <div className="bg-slate-900/50 backdrop-blur-xl rounded-xl shadow-2xl shadow-black/20 p-4 flex items-center gap-6 group hover:shadow-indigo-500/20 transition-all border border-white/10 hover:border-indigo-500/30 relative h-full">
+                                                    {/* Drag Handle */}
+                                                    <div
+                                                        {...dragProps}
+                                                        className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-white/5"
+                                                        title="Drag to reorder"
                                                     >
-                                                        #{tag.name}
-                                                    </button>
-                                                ))}
-                                                {item.tags.length > 4 && (
-                                                    <span className="text-xs text-gray-400 self-center">+{item.tags.length - 4}</span>
-                                                )}
-                                            </div>
-                                        )}
+                                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                        </svg>
+                                                    </div>
 
-                                        {/* Footer Actions */}
-                                        <div className="flex items-center gap-4 mt-2">
-                                            <ShareButton
-                                                type="ITEM"
-                                                id={item.id}
-                                                title={item.title || "Item"}
-                                                className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0 shadow-sm"
-                                            />
+                                                    {/* Image */}
+                                                    <Link href={`/items/${item.id}`} className="flex-shrink-0">
+                                                        {item.imageUrl ? (
+                                                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/20 relative">
+                                                                <img
+                                                                    src={item.imageUrl}
+                                                                    alt={item.title || "Item"}
+                                                                    className="w-full h-full object-cover"
+                                                                    referrerPolicy="no-referrer"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-24 h-24 rounded-full bg-slate-800/50 flex items-center justify-center text-gray-500 text-xs border-2 border-white/10 shadow-sm">
+                                                                No Img
+                                                            </div>
+                                                        )}
+                                                    </Link>
 
-                                            <button
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    if (confirm("Delete this item?")) {
-                                                        try {
-                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
-                                                            if (res.ok) fetchPreview();
-                                                        } catch (err) {
-                                                            console.error(err);
-                                                        }
-                                                    }
-                                                }}
-                                                className="p-1.5 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
-                                                title="Delete item"
-                                            >
-                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
+                                                    {/* Content */}
+                                                    <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-indigo-500/30 leading-none">
+                                                                #{index + 1}
+                                                            </div>
+                                                            <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
+                                                                <h3 className="font-bold text-xl text-white hover:text-indigo-400 transition truncate">
+                                                                    {item.title || "Untitled"}
+                                                                </h3>
+                                                            </Link>
+                                                        </div>
 
-                                            <span className="text-xs text-gray-400 ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                        <p className="text-gray-400 text-sm line-clamp-1">{item.content}</p>
 
-                                            {item.shares?.length > 0 && (
-                                                <div className="ml-auto text-[#4f46e5] font-medium text-sm flex items-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
-                                                    </svg>
-                                                    Shared
+                                                        {item.tags.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-1">
+                                                                {item.tags.slice(0, 4).map(({ tag }) => (
+                                                                    <button
+                                                                        key={tag.id}
+                                                                        onClick={() => openSmartList(tag.name)}
+                                                                        className="inline-block px-3 py-1 bg-gradient-to-r from-green-600/20 to-emerald-600/20 text-green-300 border border-green-500/30 rounded-full text-xs font-medium hover:from-green-600/30 hover:to-emerald-600/30 hover:border-green-500/50 transition-all cursor-pointer"
+                                                                    >
+                                                                        #{tag.name}
+                                                                    </button>
+                                                                ))}
+                                                                {item.tags.length > 4 && (
+                                                                    <span className="text-xs text-gray-400 self-center">+{item.tags.length - 4}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Footer Actions */}
+                                                        <div className="flex items-center gap-4 mt-2">
+                                                            <ShareButton
+                                                                type="ITEM"
+                                                                id={item.id}
+                                                                title={item.title || "Item"}
+                                                                className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0 shadow-sm"
+                                                            />
+
+                                                            <button
+                                                                onClick={async (e) => {
+                                                                    e.preventDefault();
+                                                                    if (confirm("Delete this item?")) {
+                                                                        try {
+                                                                            const res = await fetch(`/api/items/${item.id}`, { method: "DELETE" });
+                                                                            if (res.ok) fetchPreview();
+                                                                        } catch (err) {
+                                                                            console.error(err);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="p-1.5 rounded border border-[#ef4444] text-[#ef4444] hover:bg-red-50 transition-colors"
+                                                                title="Delete item"
+                                                            >
+                                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                </svg>
+                                                            </button>
+
+                                                            <span className="text-xs text-gray-400 ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
+
+                                                            {item.shares?.length > 0 && (
+                                                                <div className="ml-auto text-[#4f46e5] font-medium text-sm flex items-center gap-1">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                                                                        <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                                                                    </svg>
+                                                                    Shared
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
-                                        </div>
-                                    </div>
+                                        </SortableItem>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </SortableContext>
+                        </DndContext>
                     ) : (
                         /* List View */
                         <div className="space-y-2">

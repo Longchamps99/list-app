@@ -36,6 +36,9 @@ export async function GET(req: Request) {
         // This is complex in Prisma. A common way is to find items where the count of matching tags equals the count of requested tags.
         // Or using AND query for each tag.
 
+        // Create a unique contextId for this smart list combination
+        const contextId = `smart:${tagNames.sort().join('+')}`;
+
         const items = await prisma.item.findMany({
             where: {
                 // @ts-ignore
@@ -66,14 +69,28 @@ export async function GET(req: Request) {
                             }
                         }
                     }
+                },
+                // @ts-ignore
+                ranks: {
+                    where: {
+                        // @ts-ignore
+                        userId: userId,
+                        contextId: contextId
+                    }
                 }
-            },
-            orderBy: {
-                createdAt: "desc"
             }
         });
 
-        return NextResponse.json({ items, matchingTags });
+        // Sort by rank if available, otherwise by createdAt
+        items.sort((a, b) => {
+            // @ts-ignore
+            const rankA = a.ranks?.[0]?.rank || '0|h00000:';
+            // @ts-ignore
+            const rankB = b.ranks?.[0]?.rank || '0|h00000:';
+            return rankA.localeCompare(rankB);
+        });
+
+        return NextResponse.json({ items, matchingTags, contextId });
     } catch (error) {
         console.error("Smart list preview error:", error);
         return new NextResponse("Internal Error", { status: 500 });

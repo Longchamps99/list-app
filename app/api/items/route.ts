@@ -31,13 +31,13 @@ export async function GET(req: Request) {
         if (search) {
             where.AND.push({
                 OR: [
-                    { title: { contains: search } },
-                    { content: { contains: search } },
+                    { title: { contains: search, mode: 'insensitive' } },
+                    { content: { contains: search, mode: 'insensitive' } },
                     {
                         tags: {
                             some: {
                                 tag: {
-                                    name: { contains: search }
+                                    name: { contains: search, mode: 'insensitive' }
                                 }
                             }
                         }
