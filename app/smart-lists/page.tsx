@@ -268,29 +268,7 @@ function SmartListContent() {
         }
     };
 
-    const handleShare = async () => {
-        const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-        if (!shareUrl) return;
 
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: `Smart List: ${listTitle}`,
-                    text: `Check out this smart list: ${listTitle}`,
-                    url: shareUrl,
-                });
-            } catch (e) {
-                console.error("Share failed", e);
-            }
-        } else {
-            try {
-                await navigator.clipboard.writeText(shareUrl);
-                alert("Link copied to clipboard!");
-            } catch (e) {
-                console.error("Clipboard failed", e);
-            }
-        }
-    };
 
     const openSmartList = (tagName: string) => {
         const currentTags = tagsParam ? tagsParam.split(",").map(t => t.toLowerCase()) : [];
@@ -333,14 +311,13 @@ function SmartListContent() {
                 <div className="flex items-center gap-3 ml-auto">
                     {matchingTags.length > 0 && (
                         <>
-                            <button
-                                onClick={handleShare}
-                                className="px-6 py-2.5 text-white rounded-full transition-all font-semibold text-sm flex items-center gap-2"
-                                style={{ backgroundColor: '#374151', color: '#ffffff' }}
-                            >
-                                <Share2 className="h-4 w-4" />
-                                Share
-                            </button>
+                            <ShareButton
+                                type="SMART_LIST"
+                                id={contextId || undefined}
+                                title={listTitle}
+                                tags={tagsParam || undefined}
+                                className="px-6 py-2.5 text-white rounded-full transition-all font-semibold text-sm flex items-center gap-2 bg-[#374151] hover:bg-[#4b5563]"
+                            />
                             <button
                                 onClick={saveList}
                                 disabled={saving}

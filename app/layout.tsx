@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "List App - Collaborative Todo Lists",
+  title: "Kyurated: Your Taste. Cataloged",
   description: "A simple, collaborative list management application allowing you to create lists, tag items, and share with others.",
 };
 

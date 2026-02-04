@@ -14,6 +14,16 @@ export async function POST(req: NextRequest) {
         // @ts-ignore - user.id is added in session callback
         const userId = user.id;
 
+        // Check if user already has lists (to prevent duplicate onboarding)
+        const existingListCount = await prisma.list.count({
+            where: { ownerId: userId }
+        });
+
+        if (existingListCount > 0) {
+            console.log(`[Onboarding] User ${userId} already has ${existingListCount} lists. Skipping onboarding.`);
+            return NextResponse.json({ message: "Skipped", skipped: true });
+        }
+
         const { items, title } = await req.json() as { items: string[], title: string };
 
         // Deduplicate items

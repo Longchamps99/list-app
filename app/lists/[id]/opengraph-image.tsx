@@ -71,8 +71,8 @@ export default async function Image({ params }: { params: { id: string } }) {
                     },
                     ownerId: list.ownerId // Scoped to owner
                 },
-                take: 3,
-                orderBy: { createdAt: 'desc' }, // Simple ordering for now, maybe best would be rank but rank is complex
+                take: 5, // Requesting top 5
+                orderBy: { createdAt: 'desc' }, // Simple ordering for now
                 include: {
                     tags: { include: { tag: true } }
                 }
@@ -83,7 +83,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             (
                 <div
                     style={{
-                        background: 'linear-gradient(to bottom right, #020617, #1e1b4b)', // slate-950 to indigo-950
+                        background: 'linear-gradient(to bottom right, #000000, #111111)', // Pure Swiss Black
                         width: '100%',
                         height: '100%',
                         display: 'flex',
@@ -91,64 +91,82 @@ export default async function Image({ params }: { params: { id: string } }) {
                         padding: '60px',
                         justifyContent: 'space-between',
                         fontFamily: 'sans-serif',
+                        position: 'relative',
                     }}
                 >
-                    {/* Background Accents */}
+                    {/* Abstract Swiss Grid Background */}
                     <div
                         style={{
                             position: 'absolute',
-                            top: '-20%',
-                            right: '-10%',
-                            width: '600px',
-                            height: '600px',
-                            background: 'rgba(79, 70, 229, 0.15)', // indigo
-                            borderRadius: '50%',
-                            filter: 'blur(120px)',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+                            backgroundSize: '40px 40px',
                             zIndex: -1,
                         }}
                     />
 
                     {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div
                             style={{
-                                fontSize: '24px',
-                                color: '#94a3b8', // slate-400
+                                fontSize: '20px',
+                                color: '#9CA3AF', // gray-400
                                 textTransform: 'uppercase',
-                                letterSpacing: '2px',
-                                fontWeight: 600,
+                                letterSpacing: '4px',
+                                fontWeight: 700,
                             }}
                         >
                             Vaulted Smart List
                         </div>
                         <div
                             style={{
-                                fontSize: '72px',
+                                fontSize: '80px',
                                 fontWeight: 800,
                                 color: 'white',
-                                lineHeight: 1.1,
-                                maxWidth: '900px',
+                                lineHeight: 1,
+                                maxWidth: '1000px',
+                                letterSpacing: '-2px',
                             }}
                         >
                             {list.title}
                         </div>
                     </div>
 
-                    {/* Top 3 Items Collage */}
-                    <div style={{ display: 'flex', gap: '30px', margin: '40px 0' }}>
+                    {/* Top 5 Items Strip */}
+                    <div style={{ display: 'flex', gap: '24px', margin: '20px 0', alignItems: 'flex-end' }}>
                         {topItems.map((item, i) => (
-                            <div key={item.id} style={{ display: 'flex', flexDirection: 'column', width: '220px' }}>
+                            <div key={item.id} style={{ display: 'flex', flexDirection: 'column', width: '200px', position: 'relative' }}>
+                                {/* Floating Rank Number */}
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '-20px',
+                                    left: '-10px',
+                                    color: 'white',
+                                    fontSize: '80px',
+                                    fontWeight: 900,
+                                    zIndex: 10,
+                                    textShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                                    lineHeight: 1,
+                                    opacity: 0.9,
+                                    fontFamily: 'serif' // Editorial touch
+                                }}>
+                                    {i + 1}
+                                </div>
+
                                 {/* Image Container */}
                                 <div style={{
-                                    width: '220px',
-                                    height: '300px',
-                                    borderRadius: '16px',
+                                    width: '180px',
+                                    height: '240px',
+                                    borderRadius: '4px', // Tighter radius for Swiss look
                                     overflow: 'hidden',
-                                    backgroundColor: '#1e293b', // slate-800
-                                    border: '2px solid rgba(255,255,255,0.1)',
-                                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+                                    backgroundColor: '#1f2937',
+                                    border: '1px solid rgba(255,255,255,0.2)',
                                     display: 'flex',
-                                    position: 'relative'
+                                    position: 'relative',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
                                 }}>
                                     {item.imageUrl ? (
                                         <img
@@ -163,92 +181,80 @@ export default async function Image({ params }: { params: { id: string } }) {
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            fontSize: '48px',
-                                            color: '#475569'
+                                            fontSize: '32px',
+                                            color: '#6b7280',
+                                            fontWeight: 'bold'
                                         }}>
-                                            # {i + 1}
+                                            ?
                                         </div>
                                     )}
-                                    {/* Rank Badge */}
-                                    <div style={{
-                                        position: 'absolute',
-                                        top: '10px',
-                                        left: '10px',
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '50%',
-                                        backgroundColor: '#4f46e5',
-                                        color: 'white',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: 'bold',
-                                        fontSize: '16px',
-                                        boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-                                    }}>
-                                        {i + 1}
-                                    </div>
+                                </div>
+                                <div style={{
+                                    marginTop: '12px',
+                                    color: 'white',
+                                    fontSize: '16px',
+                                    fontWeight: 600,
+                                    width: '180px',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                }}>
+                                    {item.title}
                                 </div>
                             </div>
                         ))}
 
-                        {topItems.length === 0 && (
-                            <div style={{ color: '#64748b', fontSize: '24px', fontStyle: 'italic' }}>
-                                No items in this list yet.
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Footer: User & Brand */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        {/* User Profile */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            {list.owner.image ? (
-                                <img
-                                    src={list.owner.image}
-                                    width="64"
-                                    height="64"
-                                    style={{ borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)' }}
-                                />
-                            ) : (
-                                <div style={{
-                                    width: '64px',
-                                    height: '64px',
-                                    borderRadius: '50%',
-                                    background: '#334155',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    fontSize: '24px'
-                                }}>
-                                    {list.owner.name?.[0] || 'U'}
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                <span style={{ color: '#94a3b8', fontSize: '18px' }}>Curated by</span>
-                                <span style={{ color: 'white', fontSize: '24px', fontWeight: 600 }}>{list.owner.name || 'Anonymous user'}</span>
-                            </div>
-                        </div>
-
-                        {/* Brand Mark */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.8 }}>
-                            <div style={{
-                                width: '40px',
-                                height: '40px',
-                                background: 'linear-gradient(to bottom right, #4f46e5, #9333ea)',
-                                borderRadius: '10px',
+                        {/* Fillers if less than 5 items */}
+                        {Array.from({ length: Math.max(0, 5 - topItems.length) }).map((_, i) => (
+                            <div key={`empty-${i}`} style={{
+                                width: '180px',
+                                height: '240px',
+                                borderRadius: '4px',
+                                border: '2px dashed rgba(255,255,255,0.1)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: 'white',
+                                marginBottom: '36px' // Account for title height offset
+                            }}>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Footer: Brand */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            {list.owner.image ? (
+                                <img
+                                    src={list.owner.image}
+                                    width="48"
+                                    height="48"
+                                    style={{ borderRadius: '50%', border: '2px solid white' }}
+                                />
+                            ) : (
+                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#374151', border: '2px solid white' }} />
+                            )}
+                            <div style={{ color: 'white', fontSize: '24px', fontWeight: 600 }}>
+                                {list.owner.name}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{
+                                width: '32px',
+                                height: '32px',
+                                background: 'white',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'black',
                                 fontWeight: 'bold',
-                                fontSize: '24px'
+                                fontSize: '20px'
                             }}>
                                 V
                             </div>
-                            <span style={{ color: 'white', fontSize: '24px', fontWeight: 800, letterSpacing: '-1px' }}>Vaulted</span>
+                            <span style={{ color: 'white', fontSize: '24px', fontWeight: 800 }}>Vaulted</span>
                         </div>
                     </div>
 

@@ -83,11 +83,7 @@ export function Header({
                     )}
 
                     <Link href="/dashboard" className="flex items-center gap-2 group">
-                        <img
-                            src="https://lh3.googleusercontent.com/P68YSdtz6nrkq0jDrxhsyWrFc4awbJnZUArw4n8A0SjPrmk_1mL033AuAynVSIOVUtf_"
-                            alt="Vaulted Logo"
-                            className="h-7 w-7 object-contain rounded"
-                        />
+
                         <h1 className="text-lg font-semibold text-[var(--swiss-black)] group-hover:text-[var(--swiss-text-secondary)] transition-colors">
                             Vaulted
                         </h1>

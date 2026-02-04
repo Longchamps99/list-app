@@ -52,38 +52,24 @@ export default async function Image({ params }: { params: { id: string } }) {
             (
                 <div
                     style={{
-                        background: 'linear-gradient(to bottom right, #020617, #1e1b4b)', // slate-950 to indigo-950
+                        background: '#000000', // Pure Black
                         width: '100%',
                         height: '100%',
                         display: 'flex',
-                        padding: '60px',
+                        padding: '0',
                         fontFamily: 'sans-serif',
-                        gap: '60px',
+                        position: 'relative',
+                        overflow: 'hidden'
                     }}
                 >
-                    {/* Background Accent */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            bottom: '-20%',
-                            right: '-10%',
-                            width: '800px',
-                            height: '800px',
-                            background: 'radial-gradient(circle, rgba(79, 70, 229, 0.1) 0%, transparent 70%)',
-                            zIndex: -1,
-                        }}
-                    />
+                    {/* Split Layout: 50% Image, 50% Content */}
 
-                    {/* Left: Poster Image */}
+                    {/* Left: Full Bleed Image */}
                     <div style={{
-                        width: '350px',
+                        width: '50%',
                         height: '100%',
-                        flexShrink: 0,
-                        borderRadius: '24px',
-                        overflow: 'hidden',
-                        boxShadow: '0 30px 60px -10px rgba(0, 0, 0, 0.6)',
-                        border: '2px solid rgba(255,255,255,0.1)',
-                        backgroundColor: '#1e293b',
+                        position: 'relative',
+                        backgroundColor: '#111',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -95,113 +81,100 @@ export default async function Image({ params }: { params: { id: string } }) {
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         ) : (
-                            <div style={{
-                                fontSize: '64px',
-                                fontWeight: 800,
-                                color: '#475569',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                width: '100%',
-                                height: '100%'
-                            }}>
+                            <div style={{ fontSize: '120px', color: '#333', fontWeight: 'bold' }}>
                                 ?
                             </div>
                         )}
+                        {/* Subtle Overlay to ensure edge definition */}
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '4px',
+                            background: 'rgba(255,255,255,0.1)'
+                        }} />
                     </div>
 
-                    {/* Right: Content */}
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-
-                        {/* Owner badge */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', opacity: 0.8 }}>
+                    {/* Right: Typography */}
+                    <div style={{
+                        width: '50%',
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        padding: '60px',
+                        background: '#000000',
+                    }}>
+                        {/* Owner / Context */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
                             {item.owner.image ? (
                                 <img
                                     src={item.owner.image}
-                                    width="32"
-                                    height="32"
-                                    style={{ borderRadius: '50%' }}
+                                    width="40"
+                                    height="40"
+                                    style={{ borderRadius: '50%', border: '2px solid #333' }}
                                 />
                             ) : (
-                                <div style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    background: '#334155',
-                                }} />
+                                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#333' }} />
                             )}
-                            <span style={{ color: '#cbd5e1', fontSize: '20px', fontWeight: 500 }}>
-                                {item.owner.name || 'Vaulted User'}
-                            </span>
+                            <div style={{ color: '#999', fontSize: '20px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                {item.owner.name}&apos;s Pick
+                            </div>
                         </div>
 
-                        <div
-                            style={{
-                                fontSize: '64px',
-                                fontWeight: 900,
-                                color: 'white',
-                                lineHeight: 1.1,
-                                marginBottom: '24px',
-                            }}
-                        >
-                            {item.title || "Untitled Item"}
+                        {/* Title - Massive Helvetica Style */}
+                        <div style={{
+                            fontSize: '84px',
+                            fontWeight: 800,
+                            color: 'white',
+                            lineHeight: 0.9,
+                            marginBottom: '32px',
+                            letterSpacing: '-3px'
+                        }}>
+                            {item.title}
                         </div>
 
-                        {item.content && (
-                            <div style={{
-                                fontSize: '28px',
-                                color: '#94a3b8',
-                                lineHeight: 1.5,
-                                marginBottom: '32px',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 3,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                            }}>
-                                {item.content}
+                        {/* Tags Pill Row */}
+                        {item.tags.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: 'auto' }}>
+                                {item.tags.slice(0, 3).map(({ tag }) => (
+                                    <div
+                                        key={tag.id}
+                                        style={{
+                                            padding: '8px 20px',
+                                            border: '2px solid #333',
+                                            borderRadius: '99px',
+                                            color: '#ccc',
+                                            fontSize: '18px',
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        #{tag.name}
+                                    </div>
+                                ))}
                             </div>
                         )}
 
-                        {/* Tags */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-                            {item.tags.slice(0, 5).map(({ tag }) => (
-                                <div
-                                    key={tag.id}
-                                    style={{
-                                        padding: '8px 20px',
-                                        background: 'rgba(5, 150, 105, 0.2)', // green-600/20
-                                        border: '1px solid rgba(16, 185, 129, 0.3)', // green-500/30
-                                        borderRadius: '99px',
-                                        color: '#86efac', // green-300
-                                        fontSize: '20px',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    #{tag.name}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Footer Logo */}
-                        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.4 }}>
+                        {/* Footer Brand */}
+                        <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{
-                                width: '24px',
-                                height: '24px',
-                                background: '#6366f1',
-                                borderRadius: '6px',
+                                width: '32px',
+                                height: '32px',
+                                background: 'white',
+                                borderRadius: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: 'white',
-                                fontSize: '14px',
-                                fontWeight: 'bold'
+                                color: 'black',
+                                fontWeight: 'bold',
+                                fontSize: '20px'
                             }}>
                                 V
                             </div>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: 700 }}>Vaulted</span>
+                            <span style={{ color: 'white', fontSize: '24px', fontWeight: 800, letterSpacing: '-1px' }}>Vaulted</span>
                         </div>
                     </div>
-
                 </div>
             ),
             {

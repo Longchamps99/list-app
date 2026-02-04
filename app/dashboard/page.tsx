@@ -114,6 +114,14 @@ export default function Dashboard() {
 
             if (response.ok) {
                 const data = await response.json();
+
+                // If backend skipped it (e.g. user already has lists), just clean up and exit
+                if (data.skipped) {
+                    console.log("Onboarding skipped by server (user likely already has lists)");
+                    setIsOnboarding(false);
+                    return;
+                }
+
                 showToast("Your Top 5 list has been saved!", {
                     label: "View List",
                     onClick: () => router.push(`/lists/${data.listId}`)

@@ -252,11 +252,7 @@ export default function LandingPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-2">
-                            <img
-                                src="https://lh3.googleusercontent.com/P68YSdtz6nrkq0jDrxhsyWrFc4awbJnZUArw4n8A0SjPrmk_1mL033AuAynVSIOVUtf_"
-                                alt="Vaulted Logo"
-                                className="h-8 w-8 object-contain rounded-md"
-                            />
+
                             <span className="text-2xl font-bold text-[var(--swiss-black)]" style={{ letterSpacing: '-0.03em' }}>
                                 Vaulted
                             </span>
@@ -287,10 +283,10 @@ export default function LandingPage() {
                         {/* Left Column - Copy */}
                         <div>
                             <h1
-                                className="font-bold leading-[0.6] mb-8"
+                                className="font-bold leading-[0.85] mb-8"
                                 style={{
-                                    fontSize: 'clamp(5rem, 10vw, 20rem)',
-                                    letterSpacing: '-0.06em',
+                                    fontSize: 'clamp(3.5rem, 7vw, 10rem)',
+                                    letterSpacing: '-0.04em',
                                     textIndent: '-0.02em'
                                 }}
                             >
