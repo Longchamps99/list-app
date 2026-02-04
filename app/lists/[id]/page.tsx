@@ -535,11 +535,11 @@ export default function ListPage() {
                                                         {/* Image */}
                                                         <Link href={`/items/${item.id}`} className="flex-shrink-0">
                                                             {item.imageUrl ? (
-                                                                <div className="w-20 h-20 rounded-lg overflow-hidden">
+                                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden">
                                                                     <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
                                                                 </div>
                                                             ) : (
-                                                                <div className="w-20 h-20 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs">No Img</div>
+                                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs">No Img</div>
                                                             )}
                                                         </Link>
 
@@ -589,7 +589,7 @@ export default function ListPage() {
 
                                                                 <button onClick={() => deleteItem(item.id)} className="p-1 rounded text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
 
-                                                                <span className="text-xs text-[var(--swiss-text-muted)]">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                                <span className="hidden sm:inline text-xs text-[var(--swiss-text-muted)]">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                                 {item.shares?.length > 0 && (
                                                                     <div className="ml-auto text-[var(--swiss-text-secondary)] font-medium text-xs flex items-center gap-1">
@@ -640,7 +640,7 @@ export default function ListPage() {
 
                                                         {/* Actions & Metadata */}
                                                         <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                                                            <span className="text-xs text-[var(--swiss-text-muted)] whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                            <span className="hidden sm:inline text-xs text-[var(--swiss-text-muted)] whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                             {item.shares?.length > 0 && (
                                                                 <div className="text-[var(--swiss-text-secondary)] font-medium text-xs flex items-center gap-1" title="Shared">

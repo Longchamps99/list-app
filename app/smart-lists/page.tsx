@@ -513,7 +513,7 @@ function SmartListContent() {
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragProps: any) => (
-                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-4 flex items-center gap-6 group hover:border-[var(--swiss-black)] transition-all h-full">
+                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 md:p-4 flex items-center gap-3 md:gap-6 group hover:border-[var(--swiss-black)] transition-all h-full">
                                                     {/* Drag Handle */}
                                                     <div
                                                         {...dragProps}
@@ -528,7 +528,7 @@ function SmartListContent() {
                                                     {/* Image */}
                                                     <Link href={`/items/${item.id}`} className="flex-shrink-0">
                                                         {item.imageUrl ? (
-                                                            <div className="w-24 h-24 rounded-lg overflow-hidden border border-[var(--swiss-border)] relative">
+                                                            <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border border-[var(--swiss-border)] relative">
                                                                 <img
                                                                     src={item.imageUrl}
                                                                     alt={item.title || "Item"}
@@ -537,7 +537,7 @@ function SmartListContent() {
                                                                 />
                                                             </div>
                                                         ) : (
-                                                            <div className="w-24 h-24 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs border border-[var(--swiss-border)]">
+                                                            <div className="w-16 h-16 md:w-24 md:h-24 rounded-lg bg-[var(--swiss-off-white)] flex items-center justify-center text-[var(--swiss-text-muted)] text-xs border border-[var(--swiss-border)]">
                                                                 No Img
                                                             </div>
                                                         )}
@@ -576,12 +576,12 @@ function SmartListContent() {
                                                         )}
 
                                                         {/* Footer Actions */}
-                                                        <div className="flex items-center gap-4 mt-2">
+                                                        <div className="flex flex-wrap items-center gap-2 mt-2">
                                                             <ShareButton
                                                                 type="ITEM"
                                                                 id={item.id}
                                                                 title={item.title || "Item"}
-                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-2 transition-colors border-0"
+                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors border-0"
                                                             />
 
                                                             <button
@@ -604,7 +604,7 @@ function SmartListContent() {
                                                                 </svg>
                                                             </button>
 
-                                                            <span className="text-xs text-[var(--swiss-text-muted)] ml-2">{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                            <span className="hidden sm:inline text-xs text-[var(--swiss-text-muted)]">{new Date(item.createdAt).toLocaleDateString()}</span>
 
                                                             {item.shares?.length > 0 && (
                                                                 <div className="ml-auto text-[var(--swiss-text-secondary)] font-medium text-sm flex items-center gap-1">
