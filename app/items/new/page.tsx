@@ -526,7 +526,10 @@ function NewItemContent() {
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => router.push('/dashboard')}
+                                            onClick={() => {
+                                                router.refresh();
+                                                router.push('/dashboard');
+                                            }}
                                             className={primaryButtonClass}
                                         >
                                             Done

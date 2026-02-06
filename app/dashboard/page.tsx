@@ -198,7 +198,7 @@ function DashboardContent() {
             if (search) params.set("search", search);
             if (sort && sort !== "rank") params.set("sort", sort);
 
-            const res = await fetch(`/api/items?${params.toString()}`);
+            const res = await fetch(`/api/items?${params.toString()}`, { cache: 'no-store' });
 
             if (res.ok) {
                 const data = await res.json();
