@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -48,7 +48,7 @@ interface ListSummary {
     itemCount: number;
 }
 
-export default function Dashboard() {
+function DashboardContent() {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -860,5 +860,20 @@ export default function Dashboard() {
                 </main>
             </div>
         </>
+    );
+}
+
+export default function Dashboard() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[var(--swiss-off-white)]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading...</p>
+                </div>
+            </div>
+        }>
+            <DashboardContent />
+        </Suspense>
     );
 }
