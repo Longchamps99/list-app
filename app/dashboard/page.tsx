@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ShareButton } from "../components/ShareButton";
 import { Header } from "../components/Header";
@@ -12,7 +12,7 @@ import { SortableItem } from "../components/SortableItem";
 import { LexoRank } from "lexorank";
 import posthog from "posthog-js";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { ToastContainer, ToastMessage } from "../components/Toast";
 
 interface Tag {
@@ -61,11 +61,15 @@ export default function Dashboard() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [isOnboarding, setIsOnboarding] = useState(false);
+    const [isNewListModalOpen, setIsNewListModalOpen] = useState(false);
+    const [newListTag, setNewListTag] = useState("");
 
     // Toast State
     const [toasts, setToasts] = useState<ToastMessage[]>([]);
     const pendingDeletes = useRef<Map<string, { timeout: NodeJS.Timeout, item: Item, index: number }>>(new Map());
+    const pendingListDeletes = useRef<Map<string, { timeout: NodeJS.Timeout, title: string }>>(new Map());
     const processedOnboarding = useRef(false);
+    const processedDeleteList = useRef<string | null>(null);
 
     const sensors = useSensors(
         useSensor(MouseSensor, { activationConstraint: { distance: 10 } }),
@@ -87,6 +91,20 @@ export default function Dashboard() {
         };
         initializeDashboard();
     }, []);
+
+    // Handle incoming list deletion from URL params
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        const deleteListId = searchParams.get('deleteList');
+        const listTitle = searchParams.get('listTitle');
+
+        if (deleteListId && listTitle && processedDeleteList.current !== deleteListId) {
+            processedDeleteList.current = deleteListId;
+            handleListDelete(deleteListId, listTitle);
+            // Clean up URL params without full navigation
+            window.history.replaceState({}, '', '/dashboard');
+        }
+    }, [searchParams]);
 
     const checkOnboarding = async () => {
         const saved = localStorage.getItem("tempTop5");
@@ -248,6 +266,42 @@ export default function Dashboard() {
         }
     };
 
+    // List deletion with undo
+    const handleListDelete = (listId: string, listTitle: string) => {
+        // Optimistic UI update - remove from sidebar immediately
+        setLists(prev => prev.filter(l => l.id !== listId));
+
+        // Set timeout for actual API call
+        const timeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/lists/${listId}`, { method: "DELETE" });
+                if (!res.ok) console.error("Failed to delete list server-side");
+                pendingListDeletes.current.delete(listId);
+            } catch (err) {
+                console.error(err);
+            }
+        }, 3500); // 3.5s delay to allow undo
+
+        // Store pending delete info
+        pendingListDeletes.current.set(listId, { timeout, title: listTitle });
+
+        // Show Undo Toast
+        showToast(`"${listTitle}" deleted`, {
+            label: "Undo",
+            onClick: () => handleListUndo(listId)
+        });
+    };
+
+    const handleListUndo = (listId: string) => {
+        const pending = pendingListDeletes.current.get(listId);
+        if (pending) {
+            clearTimeout(pending.timeout);
+            pendingListDeletes.current.delete(listId);
+            // Refresh lists to restore it (since we didn't actually delete yet)
+            fetchLists();
+        }
+    };
+
     const handleDragStart = (event: DragStartEvent) => {
         if (typeof navigator !== "undefined" && navigator.vibrate) {
             navigator.vibrate(10);
@@ -319,6 +373,16 @@ export default function Dashboard() {
         router.push(`/smart-lists?tags=${encodeURIComponent(tagName.toLowerCase())}`);
     };
 
+    const handleCreateNewList = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newListTag.trim()) return;
+        const tag = newListTag.trim().toLowerCase().replace(/^#/, '');
+        setNewListTag("");
+        setIsNewListModalOpen(false);
+        setIsMobileSidebarOpen(false);
+        router.push(`/smart-lists?tags=${encodeURIComponent(tag)}`);
+    };
+
     const isDraggable = !sort || sort === "rank";
 
     // Separate lists into owned and shared
@@ -358,21 +422,32 @@ export default function Dashboard() {
             {/* My Lists Section */}
             <div className="flex items-center justify-between mb-4">
                 <h2 className="font-medium text-[var(--swiss-text-secondary)] uppercase tracking-wider text-xs">My Lists</h2>
-                <button
-                    onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
-                    className="p-1 text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] rounded transition-colors"
-                    title={listSort === "alpha" ? "Sort by Newest" : "Sort A-Z"}
-                >
-                    {listSort === "alpha" ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
-                        </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10 2a1 1 0 011 1v13.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 16.586V3a1 1 0 011-1z" />
-                        </svg>
-                    )}
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setIsNewListModalOpen(true)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-white bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] rounded-full transition-colors text-xs font-medium"
+                        style={{ backgroundColor: '#191919', color: '#ffffff' }}
+                        title="Create new list"
+                    >
+                        <Plus className="h-3.5 w-3.5 stroke-white" />
+                        <span className="hidden sm:inline">New</span>
+                    </button>
+                    <button
+                        onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
+                        className="p-1 text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] rounded transition-colors"
+                        title={listSort === "alpha" ? "Sort by Newest" : "Sort A-Z"}
+                    >
+                        {listSort === "alpha" ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 2a1 1 0 011 1v13.586l2.293-2.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 16.586V3a1 1 0 011-1z" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
             </div>
 
             <ul className="space-y-0.5 mb-8">
@@ -389,7 +464,7 @@ export default function Dashboard() {
                     </li>
                 ))}
                 {myLists.length === 0 && (
-                    <p className="text-[var(--swiss-text-muted)] text-sm px-3 py-2">Save a tag search to create your first Smart List</p>
+                    <p className="text-[var(--swiss-text-muted)] text-sm px-3 py-2">Click + above to create your first list</p>
                 )}
             </ul>
 
@@ -438,6 +513,72 @@ export default function Dashboard() {
     return (
         <>
             <ToastContainer toasts={toasts} onDismiss={removeToast} />
+
+            {/* New List Modal */}
+            <AnimatePresence>
+                {isNewListModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsNewListModalOpen(false)}
+                            className="fixed inset-0 bg-black/40 z-[200]"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="fixed inset-0 flex items-center justify-center z-[201] p-4"
+                        >
+                            <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold text-[var(--swiss-black)]">Create New List</h3>
+                                    <button
+                                        onClick={() => setIsNewListModalOpen(false)}
+                                        className="p-1 text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+                                <form onSubmit={handleCreateNewList}>
+                                    <label className="block text-sm font-medium text-[var(--swiss-text-secondary)] mb-2">
+                                        Enter a tag to start your list
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. book, movie, restaurant"
+                                        value={newListTag}
+                                        onChange={(e) => setNewListTag(e.target.value)}
+                                        className="w-full px-4 py-3 border border-[var(--swiss-border)] rounded-lg focus:border-[var(--swiss-black)] focus:outline-none transition-all text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)]"
+                                        autoFocus
+                                    />
+                                    <p className="text-xs text-[var(--swiss-text-muted)] mt-2 mb-4">
+                                        This tag will filter items in your list. You can add more tags later.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsNewListModalOpen(false)}
+                                            className="flex-1 px-4 py-2.5 border border-[var(--swiss-border)] text-[var(--swiss-text)] rounded-lg hover:bg-[var(--swiss-off-white)] transition-colors font-medium order-2 sm:order-1"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={!newListTag.trim()}
+                                            className="flex-1 px-4 py-2.5 bg-[var(--swiss-black)] text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
+                                        >
+                                            Create List
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             <Header variant="dashboard" onMenuClick={() => setIsMobileSidebarOpen(true)} />
             <div className="min-h-screen bg-white flex flex-col md:flex-row">
 

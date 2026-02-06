@@ -310,14 +310,10 @@ export default function ListPage() {
         }
     };
 
-    const deleteList = async () => {
-        if (!confirm("Are you sure you want to delete this list?")) return;
-        try {
-            const res = await fetch(`/api/lists/${id}`, { method: "DELETE" });
-            if (res.ok) router.push("/dashboard");
-        } catch (e) {
-            console.error(e);
-        }
+    const deleteList = () => {
+        if (!list) return;
+        // Navigate to dashboard with delete params - dashboard handles the toast and delayed delete
+        router.push(`/dashboard?deleteList=${id}&listTitle=${encodeURIComponent(list.title)}`);
     };
 
     const isDraggable = !search && sort === "rank";
@@ -378,29 +374,34 @@ export default function ListPage() {
                 backHref="/dashboard"
             >
                 {/* Page-specific actions in header */}
-                <div className="flex items-center gap-3 ml-auto">
+                <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
                     {/* Invite Collaborators Button - Secondary style */}
                     <button
                         onClick={() => setShowInviteModal(true)}
-                        className="flex items-center gap-2 px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm"
+                        className="flex items-center gap-2 px-3 md:px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm flex-shrink-1 min-w-0 truncate"
+                        title="Invite"
                     >
-                        <svg className="h-4 w-4 stroke-current" fill="none" viewBox="0 0 24 24">
+                        <svg className="h-4 w-4 stroke-current flex-shrink-0" fill="none" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM12.75 12a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                         </svg>
-                        Invite
+                        <span className="hidden md:inline">Invite</span>
                     </button>
 
                     {/* Share Button - Secondary style */}
-                    <ShareButton
-                        type="LIST"
-                        id={list.id}
-                        title={list.title}
-                        className="flex items-center gap-2 px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm"
-                    />
+                    <div className="flex-shrink-1 min-w-0">
+                        <ShareButton
+                            type="LIST"
+                            id={list.id}
+                            title={list.title}
+                            className="flex items-center gap-2 px-3 md:px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm w-full justify-center"
+                        >
+                            <span className="hidden md:inline pl-1">Share</span>
+                        </ShareButton>
+                    </div>
 
                     <button
                         onClick={deleteList}
-                        className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 border border-transparent hover:border-red-100"
+                        className="p-2 hover:bg-red-50 rounded-md transition-colors text-red-600 border border-transparent hover:border-red-100 flex-shrink-0"
                         title="Delete list"
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -427,9 +428,9 @@ export default function ListPage() {
                 {/* Main Content */}
                 <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
                     {/* Controls Bar */}
-                    <div className="mb-6 flex items-center justify-between">
+                    <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0">
                         {/* Search Bar */}
-                        <div className="flex-1 max-w-2xl relative mr-6">
+                        <div className="flex-1 w-full md:max-w-2xl relative md:mr-6">
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                                     <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -444,7 +445,7 @@ export default function ListPage() {
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
                                 <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
+                                    <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
                                         ⌘K
                                     </kbd>
                                 </div>
@@ -452,16 +453,16 @@ export default function ListPage() {
                         </div>
 
                         {/* View and Sort Controls */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
                             {/* Add New Item Button */}
                             <Link
                                 href="/items/new"
-                                className="flex items-center gap-2 px-5 py-2.5 bg-[var(--swiss-black)] rounded-full hover:bg-[var(--swiss-accent-hover)] transition-all font-medium text-sm"
+                                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--swiss-black)] rounded-full hover:bg-[var(--swiss-accent-hover)] transition-all font-medium text-sm whitespace-nowrap"
                             >
                                 <svg className="h-4 w-4 stroke-white" fill="none" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                 </svg>
-                                <span className="hidden sm:inline text-white">New Item</span>
+                                <span className="text-white">New Item</span>
                             </Link>
 
                             <div className="flex items-center gap-3 border border-[var(--swiss-border)] rounded-full px-2 py-1 bg-white">
@@ -489,9 +490,9 @@ export default function ListPage() {
 
                                 {/* Sort Dropdown */}
                                 <div className="flex items-center gap-2 text-sm">
-                                    <span className="text-[var(--swiss-text-muted)] font-medium">Sort:</span>
+                                    <span className="text-[var(--swiss-text-muted)] font-medium hidden xs:inline">Sort:</span>
                                     <select
-                                        className="border-0 focus:ring-0 text-sm font-medium text-[var(--swiss-text)] bg-transparent cursor-pointer pr-6"
+                                        className="border-0 focus:ring-0 text-sm font-medium text-[var(--swiss-text)] bg-transparent cursor-pointer pr-6 max-w-[80px] sm:max-w-none"
                                         value={sort}
                                         onChange={(e) => setSort(e.target.value)}
                                     >
@@ -525,10 +526,15 @@ export default function ListPage() {
                                             <SortableItem key={item.id} id={item.id}>
                                                 {(dragHandleProps) => (
                                                     <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-5 flex items-start gap-5 group hover:border-[var(--swiss-text-muted)] transition-all h-full">
-                                                        {/* Grip */}
+                                                        {/* Rank & Grip Column */}
                                                         {isDraggable && (
-                                                            <div className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] cursor-grab active:cursor-grabbing flex-shrink-0 pt-1" {...dragHandleProps}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
+                                                            <div className="flex flex-col items-center gap-2 flex-shrink-0 pt-0.5">
+                                                                <div className="w-10 h-10 rounded-md flex items-center justify-center bg-[var(--swiss-black)] text-white shadow-sm">
+                                                                    <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                                </div>
+                                                                <div className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] cursor-grab active:cursor-grabbing p-1" {...dragHandleProps}>
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></svg>
+                                                                </div>
                                                             </div>
                                                         )}
 
@@ -546,11 +552,6 @@ export default function ListPage() {
                                                         {/* Content */}
                                                         <div className="flex-1 flex flex-col gap-1.5 min-w-0 overflow-hidden">
                                                             <div className="flex items-center gap-2">
-                                                                {isDraggable && (
-                                                                    <div className="flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
-                                                                        <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
-                                                                    </div>
-                                                                )}
                                                                 <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
                                                                     <h3 className="font-semibold text-lg text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
                                                                         {item.title || "Untitled"}
@@ -615,19 +616,17 @@ export default function ListPage() {
                                             {(dragHandleProps) => (
                                                 <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 flex flex-col gap-2 group hover:border-[var(--swiss-text-muted)] transition-all">
                                                     <div className="flex items-center gap-3">
-                                                        {/* Rank (if draggable) */}
+                                                        {/* Rank & Grip Column */}
                                                         {isDraggable && (
-                                                            <div className="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
-                                                                <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
-                                                            </div>
-                                                        )}
-
-                                                        {/* Drag Handle (if draggable) */}
-                                                        {isDraggable && (
-                                                            <div className="cursor-grab text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] px-1 border-r border-[var(--swiss-border)] pr-2 flex-shrink-0" {...dragHandleProps}>
-                                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                                                                </svg>
+                                                            <div className="flex flex-col items-center gap-1 pr-3 border-r border-[var(--swiss-border)] flex-shrink-0">
+                                                                <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--swiss-black)] text-white">
+                                                                    <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                                </div>
+                                                                <div className="cursor-grab text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] px-1" {...dragHandleProps}>
+                                                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                                    </svg>
+                                                                </div>
                                                             </div>
                                                         )}
 

@@ -96,6 +96,7 @@ function SmartListContent() {
 
     const [items, setItems] = useState<Item[]>([]);
     const [matchingTags, setMatchingTags] = useState<Tag[]>([]);
+    const [requestedTagNames, setRequestedTagNames] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [newTagInput, setNewTagInput] = useState("");
     const [saving, setSaving] = useState(false);
@@ -131,6 +132,11 @@ function SmartListContent() {
 
     const fetchPreview = async () => {
         setLoading(true);
+
+        // Parse and store the requested tag names from URL
+        const tagNamesFromUrl = tagsParam ? tagsParam.split(",").map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+        setRequestedTagNames(tagNamesFromUrl);
+
         try {
             const res = await fetch(`/api/lists/smart/preview?tags=${encodeURIComponent(tagsParam || "")}`);
             if (res.ok) {
@@ -139,9 +145,11 @@ function SmartListContent() {
                 setMatchingTags(data.matchingTags);
                 setContextId(data.contextId);
 
-                // Initialize title based on tags if not successfully set yet
+                // Initialize title based on tags - prefer matching tags, fallback to requested tags
                 if (data.matchingTags.length > 0) {
                     setListTitle(data.matchingTags.map((t: Tag) => t.name).join(" + "));
+                } else if (tagNamesFromUrl.length > 0) {
+                    setListTitle(tagNamesFromUrl.join(" + "));
                 }
             }
         } catch (e) {
@@ -240,14 +248,20 @@ function SmartListContent() {
     };
 
     const saveList = async () => {
-        if (matchingTags.length === 0) return;
+        // Allow saving if we have matching tags OR requested tag names from URL
+        const tagsToSave = matchingTags.length > 0
+            ? matchingTags.map(t => t.name)
+            : requestedTagNames;
+
+        if (tagsToSave.length === 0) return;
+
         setSaving(true);
         try {
             const res = await fetch("/api/lists/smart", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    tagNames: matchingTags.map(t => t.name),
+                    tagNames: tagsToSave,
                     title: listTitle
                 })
             });
@@ -309,7 +323,7 @@ function SmartListContent() {
             >
                 {/* Page-specific actions in header */}
                 <div className="flex items-center gap-3 ml-auto">
-                    {matchingTags.length > 0 && (
+                    {(matchingTags.length > 0 || requestedTagNames.length > 0) && (
                         <>
                             <ShareButton
                                 type="SMART_LIST"
@@ -513,16 +527,21 @@ function SmartListContent() {
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
                                             {(dragProps: any) => (
-                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 md:p-4 flex items-center gap-3 md:gap-6 group hover:border-[var(--swiss-black)] transition-all h-full">
-                                                    {/* Drag Handle */}
-                                                    <div
-                                                        {...dragProps}
-                                                        className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-[var(--swiss-off-white)]"
-                                                        title="Drag to reorder"
-                                                    >
-                                                        <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                                                        </svg>
+                                                <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 md:p-4 flex items-start gap-3 md:gap-6 group hover:border-[var(--swiss-black)] transition-all h-full">
+                                                    {/* Rank & Grip Column */}
+                                                    <div className="flex flex-col items-center gap-2 flex-shrink-0 pt-0.5">
+                                                        <div className="w-10 h-10 rounded-md flex items-center justify-center bg-[var(--swiss-black)] text-white shadow-sm">
+                                                            <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                        </div>
+                                                        <div
+                                                            {...dragProps}
+                                                            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-[var(--swiss-off-white)] text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)]"
+                                                            title="Drag to reorder"
+                                                        >
+                                                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                            </svg>
+                                                        </div>
                                                     </div>
 
                                                     {/* Image */}
@@ -546,9 +565,6 @@ function SmartListContent() {
                                                     {/* Content */}
                                                     <div className="flex-1 flex flex-col gap-1 min-w-0 overflow-hidden">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
-                                                                <span className="text-base font-bold">{String(index + 1).padStart(2, '0')}</span>
-                                                            </div>
                                                             <Link href={`/items/${item.id}`} className="truncate flex-1 min-w-0">
                                                                 <h3 className="font-bold text-xl text-[var(--swiss-black)] hover:text-[var(--swiss-text-secondary)] transition truncate">
                                                                     {item.title || "Untitled"}
@@ -638,20 +654,20 @@ function SmartListContent() {
                                             {(dragProps: any) => (
                                                 <div className="bg-white border border-[var(--swiss-border)] rounded-lg p-3 flex flex-col gap-2 group hover:border-[var(--swiss-black)] transition-all relative">
                                                     <div className="flex items-center gap-3">
-                                                        {/* Drag Handle */}
-                                                        <div
-                                                            {...dragProps}
-                                                            className="flex-shrink-0 cursor-grab active:cursor-grabbing p-1 rounded hover:bg-[var(--swiss-off-white)]"
-                                                            title="Drag to reorder"
-                                                        >
-                                                            <svg className="h-4 w-4 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                                                            </svg>
-                                                        </div>
-
-                                                        {/* Rank Badge */}
-                                                        <div className="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
-                                                            <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                        {/* Rank & Grip Column */}
+                                                        <div className="flex flex-col items-center gap-1 pr-3 border-r border-[var(--swiss-border)] flex-shrink-0">
+                                                            <div className="w-8 h-8 rounded-md flex items-center justify-center bg-[var(--swiss-black)] text-white">
+                                                                <span className="text-sm font-bold">{String(index + 1).padStart(2, '0')}</span>
+                                                            </div>
+                                                            <div
+                                                                {...dragProps}
+                                                                className="cursor-grab text-[var(--swiss-text-muted)] hover:text-[var(--swiss-text)] px-1"
+                                                                title="Drag to reorder"
+                                                            >
+                                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                                </svg>
+                                                            </div>
                                                         </div>
 
                                                         {/* Title */}
