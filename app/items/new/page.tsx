@@ -11,6 +11,7 @@ import { SafeImage } from "../../../components/SafeImage";
 import {
     tagPillClass,
     primaryButtonClass,
+    primaryButtonStyle,
     secondaryButtonClass,
     inputClass,
     cardClass,
@@ -308,6 +309,7 @@ function NewItemContent() {
                                         onClick={searchForCandidates}
                                         disabled={!title.trim() || isSearching || isEnriching}
                                         className={`${primaryButtonClass} mr-2 py-4 px-8 rounded-full`}
+                                        style={primaryButtonStyle}
                                     >
                                         Search
                                     </button>
