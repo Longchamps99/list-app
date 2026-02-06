@@ -77,6 +77,9 @@ export default function Dashboard() {
     );
 
     useEffect(() => {
+        // Wait for session to be established before fetching data
+        if (!session) return;
+
         const initializeDashboard = async () => {
             // Check if we have onboarding items waiting
             const hasOnboarding = typeof window !== 'undefined' && !!localStorage.getItem("tempTop5");
@@ -90,7 +93,7 @@ export default function Dashboard() {
             }
         };
         initializeDashboard();
-    }, []);
+    }, [session]);
 
     // Handle incoming list deletion from URL params
     const searchParams = useSearchParams();
