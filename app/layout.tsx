@@ -20,7 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kyurated: Your Taste. Cataloged",
+  title: "Vaulted: Your taste, cataloged",
   description: "A simple, collaborative list management application allowing you to create lists, tag items, and share with others.",
 };
 

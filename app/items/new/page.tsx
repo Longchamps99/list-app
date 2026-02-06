@@ -42,6 +42,7 @@ function NewItemContent() {
     const [imageUrl, setImageUrl] = useState("");
     const [itemLink, setItemLink] = useState("");
     const [location, setLocation] = useState("");
+    const [status, setStatus] = useState<'EXPERIENCED' | 'WANT_TO_EXPERIENCE'>('EXPERIENCED');
 
     const [tags, setTags] = useState<string[]>([]);
 
@@ -82,7 +83,7 @@ function NewItemContent() {
         if (savedItemId && hasSearched) {
             saveChanges();
         }
-    }, [debouncedTitle, debouncedDescription, debouncedImageUrl, debouncedLink, debouncedLocation]);
+    }, [debouncedTitle, debouncedDescription, debouncedImageUrl, debouncedLink, debouncedLocation, status]);
 
     const saveChanges = async (specificUpdates?: any) => {
         if (!savedItemId) return;
@@ -93,7 +94,8 @@ function NewItemContent() {
                 content: description,
                 imageUrl,
                 link: itemLink,
-                location
+                location,
+                status
             };
             const res = await fetch(`/api/items/${savedItemId}`, {
                 method: "PATCH",
@@ -174,7 +176,8 @@ function NewItemContent() {
                             imageUrl: newImg,
                             link: newLink,
                             location: newLoc,
-                            customTags: newTags
+                            customTags: newTags,
+                            status
                         })
                     });
 
@@ -433,6 +436,41 @@ function NewItemContent() {
                                             </div>
                                         </div>
 
+                                        {/* Status Toggle - matching Item Detail design */}
+                                        {/* Hide if the first tag is "person" */}
+                                        {(() => {
+                                            const firstTag = tags[0]?.toLowerCase().replace('#', '');
+                                            if (firstTag === 'person') return null;
+
+                                            return (
+                                                <div className="flex items-center justify-between bg-[var(--swiss-off-white)] rounded-lg p-4 border border-[var(--swiss-border)] shadow-sm">
+                                                    <span className="text-[10px] font-bold text-[var(--swiss-text-secondary)] uppercase tracking-widest">Status</span>
+                                                    <div className="inline-flex rounded-lg border border-[var(--swiss-border)] p-1 bg-white shadow-sm">
+                                                        <button
+                                                            onClick={() => setStatus('EXPERIENCED')}
+                                                            style={status === 'EXPERIENCED' ? { backgroundColor: '#191919', color: '#ffffff', borderColor: '#191919' } : {}}
+                                                            className={`px-4 py-2 rounded-md text-xs font-bold transition-all cursor-pointer border-2 ${status === 'EXPERIENCED'
+                                                                ? 'shadow-sm'
+                                                                : 'text-[var(--swiss-text)] bg-white border-transparent hover:border-[#191919] hover:bg-[var(--swiss-cream)]'
+                                                                }`}
+                                                        >
+                                                            ✓ Experienced
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setStatus('WANT_TO_EXPERIENCE')}
+                                                            style={status === 'WANT_TO_EXPERIENCE' ? { backgroundColor: '#191919', color: '#ffffff', borderColor: '#191919' } : {}}
+                                                            className={`px-4 py-2 rounded-md text-xs font-bold transition-all cursor-pointer border-2 ${status === 'WANT_TO_EXPERIENCE'
+                                                                ? 'shadow-sm'
+                                                                : 'text-[var(--swiss-text)] bg-white border-transparent hover:border-[#191919] hover:bg-[var(--swiss-cream)]'
+                                                                }`}
+                                                        >
+                                                            ★ Want to experience
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+
                                         {/* Full Length Description */}
                                         <div className="bg-[var(--swiss-off-white)] rounded-lg p-4 border border-[var(--swiss-border)]">
                                             <label className="block text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest mb-2">Description</label>
@@ -637,4 +675,3 @@ export default function NewItemPage() {
         </Suspense>
     );
 }
-

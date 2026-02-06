@@ -139,6 +139,7 @@ function DashboardContent() {
                 // If backend skipped it (e.g. user already has lists), just clean up and exit
                 if (data.skipped) {
                     console.log("Onboarding skipped by server (user likely already has lists)");
+                    await Promise.all([fetchItems(), fetchLists()]);
                     setIsOnboarding(false);
                     return;
                 }
@@ -162,6 +163,7 @@ function DashboardContent() {
             console.error("Failed to create onboarding list:", error);
             // Restore on error
             localStorage.setItem("tempTop5", saved);
+            setIsOnboarding(false);
         }
     };
 
@@ -177,7 +179,7 @@ function DashboardContent() {
             }
         }, 300);
         return () => clearTimeout(handler);
-    }, [search, sort]);
+    }, [search, sort, isOnboarding]);
 
     const fetchLists = async () => {
         try {
@@ -423,18 +425,9 @@ function DashboardContent() {
             </div>
 
             {/* My Lists Section */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
                 <h2 className="font-medium text-[var(--swiss-text-secondary)] uppercase tracking-wider text-xs">My Lists</h2>
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => setIsNewListModalOpen(true)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-white bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] rounded-full transition-colors text-xs font-medium"
-                        style={{ backgroundColor: '#191919', color: '#ffffff' }}
-                        title="Create new list"
-                    >
-                        <Plus className="h-3.5 w-3.5 stroke-white" />
-                        <span className="hidden sm:inline">New</span>
-                    </button>
                     <button
                         onClick={() => setListSort(prev => prev === "alpha" ? "newest" : "alpha")}
                         className="p-1 text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] rounded transition-colors"
@@ -452,6 +445,16 @@ function DashboardContent() {
                     </button>
                 </div>
             </div>
+
+            <button
+                onClick={() => setIsNewListModalOpen(true)}
+                className="w-full flex items-center justify-center gap-2 mb-4 px-3 py-2 text-white bg-[var(--swiss-black)] hover:bg-[var(--swiss-accent-hover)] rounded-lg transition-colors text-xs font-bold shadow-sm"
+                style={{ backgroundColor: '#191919', color: '#ffffff' }}
+                title="Create new list"
+            >
+                <span>New List</span>
+                <Plus className="h-3.5 w-3.5 stroke-white" />
+            </button>
 
             <ul className="space-y-0.5 mb-8">
                 {sortLists(myLists).map(list => (
@@ -546,20 +549,17 @@ function DashboardContent() {
                                 </div>
                                 <form onSubmit={handleCreateNewList}>
                                     <label className="block text-sm font-medium text-[var(--swiss-text-secondary)] mb-2">
-                                        Enter a tag to start your list
+                                        Enter a title for your new list
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="e.g. book, movie, restaurant"
+                                        placeholder="e.g. Favorite books, Favorite Action movies, Best restaurants in NYC"
                                         value={newListTag}
                                         onChange={(e) => setNewListTag(e.target.value)}
                                         className="w-full px-4 py-3 border border-[var(--swiss-border)] rounded-lg focus:border-[var(--swiss-black)] focus:outline-none transition-all text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)]"
                                         autoFocus
                                     />
-                                    <p className="text-xs text-[var(--swiss-text-muted)] mt-2 mb-4">
-                                        This tag will filter items in your list. You can add more tags later.
-                                    </p>
-                                    <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="flex flex-col sm:flex-row gap-3 mt-6">
                                         <button
                                             type="button"
                                             onClick={() => setIsNewListModalOpen(false)}
@@ -570,6 +570,7 @@ function DashboardContent() {
                                         <button
                                             type="submit"
                                             disabled={!newListTag.trim()}
+                                            style={{ backgroundColor: '#191919', color: '#ffffff' }}
                                             className="flex-1 px-4 py-2.5 bg-[var(--swiss-black)] text-white rounded-lg hover:bg-[var(--swiss-accent-hover)] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
                                         >
                                             Create List
@@ -802,50 +803,26 @@ function DashboardContent() {
                                                             </h3>
                                                         </Link>
 
-                                                        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                                                            <span className="text-xs text-[var(--swiss-text-muted)] whitespace-nowrap">{new Date(item.createdAt).toLocaleDateString()}</span>
-
+                                                        <div className="flex items-center gap-2">
                                                             <ShareButton
                                                                 type="ITEM"
                                                                 id={item.id}
                                                                 title={item.title || "Item"}
-                                                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors border-0"
+                                                                className="p-1.5 rounded-full text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] transition-colors border-0"
                                                             />
-
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
                                                                     handleDelete(item.id);
                                                                 }}
-                                                                className="p-1 rounded text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors"
-                                                                title="Delete item"
+                                                                className="p-1.5 rounded-full text-[var(--swiss-text-muted)] hover:text-[var(--swiss-red)] transition-colors"
                                                             >
-                                                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                                 </svg>
                                                             </button>
                                                         </div>
                                                     </div>
-
-                                                    {item.tags.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-6">
-                                                            {item.tags.slice(0, 4).map(({ tag }) => (
-                                                                <button
-                                                                    key={tag.id}
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        openSmartList(tag.name);
-                                                                    }}
-                                                                    className="inline-block px-2 py-0.5 bg-[var(--swiss-off-white)] text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full text-[10px] font-medium hover:bg-[var(--swiss-cream)] hover:border-[var(--swiss-text-muted)] transition-all cursor-pointer"
-                                                                >
-                                                                    #{tag.name}
-                                                                </button>
-                                                            ))}
-                                                            {item.tags.length > 4 && (
-                                                                <span className="text-[10px] text-[var(--swiss-text-muted)] self-center">+{item.tags.length - 4}</span>
-                                                            )}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             )}
                                         </SortableItem>
@@ -854,22 +831,19 @@ function DashboardContent() {
                             )}
                         </SortableContext>
                     </DndContext>
-
-                    <footer className="mt-12 text-xs text-[var(--swiss-text-muted)] text-center border-t border-[var(--swiss-border)] pt-4">
-                    </footer>
                 </main>
             </div>
         </>
     );
 }
 
-export default function Dashboard() {
+export default function DashboardPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-[var(--swiss-off-white)]">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                    <p className="text-gray-500">Loading...</p>
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-10 h-10 border-2 border-[var(--swiss-border)] border-t-[var(--swiss-black)] rounded-full animate-spin"></div>
+                    <p className="text-[var(--swiss-text-secondary)] font-medium">Loading Dashboard...</p>
                 </div>
             </div>
         }>

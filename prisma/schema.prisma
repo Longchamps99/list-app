@@ -50,7 +50,7 @@ model Item {
   imageUrl  String?
   link      String?
   location  String?
-  status    String?      // 'EXPERIENCED' or 'WANT_TO_EXPERIENCE'
+  status    String?      @default("EXPERIENCED") // 'EXPERIENCED' or 'WANT_TO_EXPERIENCE'
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now()) @updatedAt
   ownerId   String

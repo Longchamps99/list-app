@@ -380,29 +380,39 @@ export default function ItemDetailPage() {
                                     />
 
                                     {/* Status Toggle */}
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">Status:</span>
-                                        <div className="inline-flex rounded-lg border border-[var(--swiss-border)] p-0.5 bg-[var(--swiss-off-white)]">
-                                            <button
-                                                onClick={() => handleStatusChange('EXPERIENCED')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${status === 'EXPERIENCED'
-                                                    ? 'bg-[#0d5c0a] text-white shadow-sm'
-                                                    : 'text-[var(--swiss-text-muted)] hover:bg-white hover:text-[#0d5c0a] active:bg-[#e8f5e8]'
-                                                    }`}
-                                            >
-                                                ✓ Experienced
-                                            </button>
-                                            <button
-                                                onClick={() => handleStatusChange('WANT_TO_EXPERIENCE')}
-                                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${status === 'WANT_TO_EXPERIENCE'
-                                                    ? 'bg-[#b45309] text-white shadow-sm'
-                                                    : 'text-[var(--swiss-text-muted)] hover:bg-white hover:text-[#b45309] active:bg-[#fef3c7]'
-                                                    }`}
-                                            >
-                                                ★ Want to Go
-                                            </button>
-                                        </div>
-                                    </div>
+                                    {/* Hide if the first tag is "person" */}
+                                    {(() => {
+                                        const firstTag = item.tags?.[0]?.tag?.name?.toLowerCase().replace('#', '');
+                                        if (firstTag === 'person') return null;
+
+                                        return (
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-bold text-[var(--swiss-text-secondary)] uppercase tracking-widest">Status:</span>
+                                                <div className="inline-flex rounded-lg border border-[var(--swiss-border)] p-1 bg-[var(--swiss-off-white)] shadow-sm">
+                                                    <button
+                                                        onClick={() => handleStatusChange('EXPERIENCED')}
+                                                        style={status === 'EXPERIENCED' ? { backgroundColor: '#191919', color: '#ffffff', borderColor: '#191919' } : {}}
+                                                        className={`px-4 py-2 rounded-md text-xs font-bold transition-all cursor-pointer border-2 ${status === 'EXPERIENCED'
+                                                            ? 'shadow-sm'
+                                                            : 'text-[var(--swiss-text)] bg-white border-transparent hover:border-[#191919] hover:bg-[var(--swiss-cream)]'
+                                                            }`}
+                                                    >
+                                                        ✓ Experienced
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange('WANT_TO_EXPERIENCE')}
+                                                        style={status === 'WANT_TO_EXPERIENCE' ? { backgroundColor: '#191919', color: '#ffffff', borderColor: '#191919' } : {}}
+                                                        className={`px-4 py-2 rounded-md text-xs font-bold transition-all cursor-pointer border-2 ${status === 'WANT_TO_EXPERIENCE'
+                                                            ? 'shadow-sm'
+                                                            : 'text-[var(--swiss-text)] bg-white border-transparent hover:border-[#191919] hover:bg-[var(--swiss-cream)]'
+                                                            }`}
+                                                    >
+                                                        ★ Want to experience
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* Tags */}
                                     <div className="flex flex-wrap gap-2">

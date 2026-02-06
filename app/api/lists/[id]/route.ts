@@ -10,6 +10,73 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     // @ts-ignore
     const userId = user.id;
 
+    // --- Virtual Lists Handling ---
+    if (id === 'virtual-want' || id === 'virtual-have') {
+        const isWant = id === 'virtual-want';
+        const title = isWant ? 'Want to Experience' : 'Have Experienced';
+
+        // Fetch all items for filtering
+        const allItems = await prisma.item.findMany({
+            where: { ownerId: userId },
+            include: {
+                tags: { include: { tag: true } },
+                shares: {
+                    include: {
+                        sharedBy: {
+                            select: { name: true, image: true, email: true }
+                        }
+                    }
+                },
+                // @ts-ignore
+                ranks: {
+                    where: {
+                        // @ts-ignore
+                        userId: userId,
+                        contextId: id // Use virtual ID for ranking context
+                    }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        // Filter items
+        const isPerson = (item: any) => {
+            const firstTagName = item.tags?.[0]?.tag?.name;
+            if (!firstTagName) return false;
+            return firstTagName.toLowerCase().replace('#', '') === 'person';
+        };
+
+        const filteredItems = allItems.filter(item => {
+            if (isPerson(item)) return false;
+
+            if (isWant) {
+                return item.status === 'WANT_TO_EXPERIENCE';
+            } else {
+                return item.status === 'EXPERIENCED' || item.status === null;
+            }
+        });
+
+        // Sort by Rank
+        filteredItems.sort((a, b) => {
+            // @ts-ignore
+            const rankA = a.ranks?.[0]?.rank || "0|h00000:";
+            // @ts-ignore
+            const rankB = b.ranks?.[0]?.rank || "0|h00000:";
+            return rankA.localeCompare(rankB);
+        });
+
+        return NextResponse.json({
+            id,
+            title,
+            filterTags: [],
+            createdAt: new Date(0).toISOString(),
+            ownerId: userId,
+            owner: { email: user.email, id: userId },
+            shares: [],
+            items: filteredItems
+        });
+    }
+
     // 1. Fetch List Definition (Context & Shares)
     const list = await prisma.list.findUnique({
         where: { id: id },

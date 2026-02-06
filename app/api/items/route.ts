@@ -110,7 +110,7 @@ export async function POST(req: Request) {
     const userId = user.id;
 
     try {
-        const { content, title, imageUrl, link, location, customTags } = await req.json();
+        const { content, title, imageUrl, link, location, customTags, status = 'EXPERIENCED' } = await req.json();
 
         // Create Item
         const item = await prisma.item.create({
@@ -120,6 +120,7 @@ export async function POST(req: Request) {
                 imageUrl,
                 link,
                 location,
+                status,
                 // @ts-ignore
                 ownerId: userId,
             },

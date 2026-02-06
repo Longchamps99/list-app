@@ -56,7 +56,60 @@ export async function GET() {
             })
         );
 
-        return NextResponse.json(listsWithCounts);
+        // --- Virtual Lists Logic ---
+        // Fetch minimal item data to calculate counts in-memory
+        // We need this to apply the specific "first tag != person" logic accurately
+        const allUserItems = await prisma.item.findMany({
+            where: { ownerId: userId },
+            select: {
+                status: true,
+                tags: {
+                    select: {
+                        tag: { select: { name: true } }
+                    }
+                }
+            }
+        });
+
+        // Helper to check if item is "person"
+        const isPerson = (item: { tags: { tag: { name: string } }[] }) => {
+            const firstTagName = item.tags?.[0]?.tag?.name;
+            if (!firstTagName) return false;
+            return firstTagName.toLowerCase().replace('#', '') === 'person';
+        };
+
+        const wantCount = allUserItems.filter(i =>
+            i.status === 'WANT_TO_EXPERIENCE' && !isPerson(i)
+        ).length;
+
+        const haveCount = allUserItems.filter(i =>
+            (i.status === 'EXPERIENCED' || i.status === null) && !isPerson(i)
+        ).length;
+
+        const virtualLists = [
+            {
+                id: 'virtual-want',
+                title: 'Want to Experience',
+                filterTags: [],
+                createdAt: new Date(0).toISOString(), // Places it at the bottom of "Newest" sort
+                ownerId: userId,
+                owner: { email: user.email || "", id: userId },
+                shares: [],
+                itemCount: wantCount
+            },
+            {
+                id: 'virtual-have',
+                title: 'Have Experienced',
+                filterTags: [],
+                createdAt: new Date(0).toISOString(),
+                ownerId: userId,
+                owner: { email: user.email || "", id: userId },
+                shares: [],
+                itemCount: haveCount
+            }
+        ];
+
+        return NextResponse.json([...virtualLists, ...listsWithCounts]);
     } catch (error) {
         console.error('[Lists API] Error:', error);
         return new NextResponse("Internal Error", { status: 500 });
