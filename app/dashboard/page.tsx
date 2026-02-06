@@ -181,7 +181,7 @@ function DashboardContent() {
 
     const fetchLists = async () => {
         try {
-            const res = await fetch("/api/lists");
+            const res = await fetch("/api/lists", { cache: "no-store" });
             if (res.ok) {
                 const data = await res.json();
                 setLists(data);

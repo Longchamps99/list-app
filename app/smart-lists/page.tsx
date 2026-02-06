@@ -120,7 +120,7 @@ function SmartListContent() {
 
     const fetchAllTags = async () => {
         try {
-            const res = await fetch("/api/tags");
+            const res = await fetch("/api/tags", { cache: "no-store" });
             if (res.ok) {
                 const data = await res.json();
                 setAllTags(data);
