@@ -170,13 +170,12 @@ function SmartListContent() {
         if (!over || active.id === over.id || !contextId) return;
 
         // Ensure we are in a rankable view
-        if (sort !== \"rank\" || search.trim()) return;
+        if (sort !== "rank" || search.trim()) return;
 
         setItems(prevItems => {
             const currentFiltered = prevItems
                 .filter(item => {
                     if (!search.trim()) return true;
-                    // Note: search is empty here due to guard, but keeping for logic safety
                     const searchLower = search.toLowerCase();
                     return (
                         (item.title && item.title.toLowerCase().includes(searchLower)) ||
@@ -184,8 +183,8 @@ function SmartListContent() {
                     );
                 })
                 .sort((a, b) => {
-                    const rankA = a.ranks?.[0]?.rank || \"0|zzzzzz:\";
-                    const rankB = b.ranks?.[0]?.rank || \"0|zzzzzz:\";
+                    const rankA = a.ranks?.[0]?.rank || "0|zzzzzz:";
+                    const rankB = b.ranks?.[0]?.rank || "0|zzzzzz:";
                     return rankA.localeCompare(rankB);
                 });
 
@@ -214,7 +213,7 @@ function SmartListContent() {
                     newRankStr = prev.between(next).toString();
                 }
             } catch (e) {
-                console.error(\"Rank error\", e);
+                console.error("Rank error", e);
                 try {
                     const prev = LexoRank.parse(prevRankStr);
                     newRankStr = prev.genNext().toString();
@@ -224,14 +223,13 @@ function SmartListContent() {
             }
 
             // API Update - non-blocking
-            fetch(\"/api/ranks\", {
-                method: \"POST\",
-                headers: {
-            \"Content-Type\": \"application/json\" },
+            fetch("/api/ranks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                contextId: contextId,
-                updates: [{ itemId: active.id, rank: newRankStr }]
-            })
+                    contextId: contextId,
+                    updates: [{ itemId: active.id, rank: newRankStr }]
+                })
             });
 
             // Return new global items with the updated rank
@@ -245,7 +243,7 @@ function SmartListContent() {
                 return item;
             });
         });
-    };
+    }
 
     const addTagFilter = (e: React.FormEvent) => {
         e.preventDefault();
@@ -547,7 +545,7 @@ function SmartListContent() {
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}
                         >
-                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy} disabled={sort !== "rank" || !!search.trim()}>
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
@@ -672,7 +670,7 @@ function SmartListContent() {
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}
                         >
-                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy}>
+                            <SortableContext items={filteredItems.map(i => i.id)} strategy={rectSortingStrategy} disabled={sort !== "rank" || !!search.trim()}>
                                 <div className="space-y-2">
                                     {filteredItems.map((item, index) => (
                                         <SortableItem key={item.id} id={item.id}>
