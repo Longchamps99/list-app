@@ -169,7 +169,7 @@ button {
   cursor: pointer;
   transition: all var(--transition-base);
   border: none;
-  background: transparent;
+  background-color: transparent;
 }
 
 button:disabled {
