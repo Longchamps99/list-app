@@ -20,6 +20,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://vaultedfaves.com"),
   title: "Vaulted: Your taste, cataloged",
   description: "A simple, collaborative list management application allowing you to create lists, tag items, and share with others.",
 };
