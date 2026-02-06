@@ -20,6 +20,7 @@ import {
     SortableContext,
     sortableKeyboardCoordinates,
     rectSortingStrategy,
+    verticalListSortingStrategy,
     useSortable,
     horizontalListSortingStrategy
 } from "@dnd-kit/sortable";
@@ -142,19 +143,23 @@ export default function ListPage() {
         }
     };
 
+
     const handleDragEnd = async (event: DragEndEvent) => {
         const { active, over } = event;
         if (!over || active.id === over.id || !list) return;
 
-        const items = list.items;
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
+        // IMPORTANT: Use filteredItems since that's what SortableContext renders
+        // This ensures indices match the visual order
+        const oldIndex = filteredItems.findIndex((i) => i.id === active.id);
+        const newIndex = filteredItems.findIndex((i) => i.id === over.id);
 
-        const newItems = arrayMove(items, oldIndex, newIndex);
+        if (oldIndex === -1 || newIndex === -1) return;
 
-        // Calculate Rank
-        const prevItem = newItems[newIndex - 1];
-        const nextItem = newItems[newIndex + 1];
+        const reorderedItems = arrayMove(filteredItems, oldIndex, newIndex);
+
+        // Calculate Rank based on neighbors in the reordered array
+        const prevItem = reorderedItems[newIndex - 1];
+        const nextItem = reorderedItems[newIndex + 1];
 
         const prevRankStr = prevItem?.ranks?.[0]?.rank || LexoRank.min().toString();
         const nextRankStr = nextItem?.ranks?.[0]?.rank || LexoRank.max().toString();
@@ -179,15 +184,17 @@ export default function ListPage() {
             }
         }
 
-        // Optimistic Update
-        const updatedList = { ...list, items: newItems };
-        // Update the item rank locally in the optimism
-        if (updatedList.items[newIndex].ranks) {
-            updatedList.items[newIndex].ranks[0] = { rank: newRankStr };
-        } else {
-            updatedList.items[newIndex].ranks = [{ rank: newRankStr }];
+        // Optimistic Update - update the ranks on the moved item in list.items
+        const movedItem = list.items.find(i => i.id === active.id);
+        if (movedItem) {
+            if (movedItem.ranks && movedItem.ranks.length > 0) {
+                movedItem.ranks[0] = { rank: newRankStr };
+            } else {
+                movedItem.ranks = [{ rank: newRankStr }];
+            }
         }
-        setList(updatedList);
+        // Trigger re-render with updated ranks
+        setList({ ...list, items: [...list.items] });
 
         // API Update
         await fetch("/api/ranks", {
@@ -512,7 +519,7 @@ export default function ListPage() {
                     >
                         <SortableContext
                             items={filteredItems.map(i => i.id)}
-                            strategy={viewMode === "grid" ? rectSortingStrategy : undefined}
+                            strategy={viewMode === "grid" ? rectSortingStrategy : verticalListSortingStrategy}
                             disabled={!isDraggable}
                         >
                             {viewMode === "grid" ? (
