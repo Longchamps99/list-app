@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { type, id } = await req.json();
+        const { type, id, permission = "READ" } = await req.json();
         // @ts-ignore
         // @ts-ignore
         const userId = session.user.id;
@@ -75,7 +75,8 @@ export async function POST(req: NextRequest) {
                 // @ts-ignore
                 // @ts-ignore
                 creatorId: session.user.id,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days expiry
+                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days expiry
+                permission: permission // Store requested permission
             }
         });
 

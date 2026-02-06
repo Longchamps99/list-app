@@ -167,6 +167,7 @@ model ShareToken {
   creatorId String
   createdAt DateTime  @default(now())
   expiresAt DateTime?
+  permission String    @default("READ") // 'READ' or 'WRITE'
   creator   User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
 }
 

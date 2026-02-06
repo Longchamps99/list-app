@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Link as LinkIcon, MessageCircle, Send, Twitter, Facebook } from "lucide-react";
+import { X, Link as LinkIcon, MessageCircle, Send } from "lucide-react";
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -12,12 +12,14 @@ interface ShareModalProps {
     title: string;
     // For smart lists that might not have a DB ID yet, we might need tags
     tags?: string;
+    mode?: "SHARE" | "COLLABORATE";
 }
 
-export function ShareModal({ isOpen, onClose, type, id, title, tags }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, type, id, title, tags, mode = "SHARE" }: ShareModalProps) {
     const [shareUrl, setShareUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [permission, setPermission] = useState<"READ" | "WRITE">("READ");
 
     // Determine the preview image URL
     // For items/lists we have IDs. For smart lists... we need a strategy. 
@@ -31,11 +33,20 @@ export function ShareModal({ isOpen, onClose, type, id, title, tags }: ShareModa
 
     useEffect(() => {
         if (isOpen) {
-            generateLink();
+            // Reset permission to default when opening, unless we want to persist? Default to READ is safer.
+            setPermission("READ");
+            generateLink("READ");
         }
     }, [isOpen, type, id, tags]);
 
-    const generateLink = async () => {
+    // Regenerate link when permission changes (only for COLLABORATE mode)
+    useEffect(() => {
+        if (isOpen && mode === "COLLABORATE") {
+            generateLink(permission);
+        }
+    }, [permission]);
+
+    const generateLink = async (perm: "READ" | "WRITE" = "READ") => {
         setLoading(true);
         try {
             // If we already have a full URL (e.g. valid window location), we could start with that
@@ -50,7 +61,11 @@ export function ShareModal({ isOpen, onClose, type, id, title, tags }: ShareModa
             const res = await fetch("/api/share/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ type: type === 'SMART_LIST' ? 'LIST' : type, id }),
+                body: JSON.stringify({
+                    type: type === 'SMART_LIST' ? 'LIST' : type,
+                    id,
+                    permission: perm
+                }),
             });
 
             if (res.ok) {
@@ -102,18 +117,6 @@ export function ShareModal({ isOpen, onClose, type, id, title, tags }: ShareModa
             }
         },
         {
-            name: "Facebook",
-            icon: <Facebook className="w-6 h-6 text-white" />,
-            color: "bg-[#1877F2]",
-            action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')
-        },
-        {
-            name: "X",
-            icon: <Twitter className="w-6 h-6 text-white" />, // X logo is complex, Twitter is close enough or use X svg
-            color: "bg-black",
-            action: () => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(title)}`, '_blank')
-        },
-        {
             name: copied ? "Copied!" : "Copy link",
             icon: <LinkIcon className="w-6 h-6 text-black" />,
             color: "bg-gray-200",
@@ -148,11 +151,50 @@ export function ShareModal({ isOpen, onClose, type, id, title, tags }: ShareModa
                                 <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                                     <X className="w-5 h-5 text-gray-500" />
                                 </button>
-                                <h3 className="text-lg font-bold text-gray-900">Share</h3>
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    {mode === "COLLABORATE" ? "Invite Collaborator" : "Share"}
+                                </h3>
                                 <div className="w-9" /> {/* Spacer for centering */}
                             </div>
 
                             <div className="p-6 overflow-y-auto">
+                                {/* Permission Toggle (Only for COLLABORATE mode) */}
+                                {mode === "COLLABORATE" && (
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-bold text-gray-900 mb-2">Permission Level</label>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setPermission('WRITE')}
+                                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${permission === 'WRITE'
+                                                    ? 'bg-[#191919] text-white border-[#191919] shadow-md transform scale-[1.02]'
+                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900'
+                                                    }`}
+                                            >
+                                                {permission === 'WRITE' && (
+                                                    <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                                Can Edit
+                                            </button>
+                                            <button
+                                                onClick={() => setPermission('READ')}
+                                                className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${permission === 'READ'
+                                                    ? 'bg-[#191919] text-white border-[#191919] shadow-md transform scale-[1.02]'
+                                                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900'
+                                                    }`}
+                                            >
+                                                {permission === 'READ' && (
+                                                    <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                )}
+                                                View Only
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Preview Card */}
                                 <div className="flex gap-4 mb-8 bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                     <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-100 shrink-0">

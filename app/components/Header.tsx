@@ -15,6 +15,7 @@ interface HeaderProps {
     children?: React.ReactNode;
     isEditable?: boolean;
     onTitleChange?: (value: string) => void;
+    onTitleSave?: () => void;
 }
 
 export function Header({
@@ -25,7 +26,8 @@ export function Header({
     onMenuClick,
     children,
     isEditable = false,
-    onTitleChange
+    onTitleChange,
+    onTitleSave
 }: HeaderProps) {
     const { data: session } = useSession();
     const router = useRouter();
@@ -97,7 +99,13 @@ export function Header({
                                     type="text"
                                     value={title}
                                     onChange={(e) => onTitleChange?.(e.target.value)}
-                                    className="text-base font-medium text-[var(--swiss-text)] bg-transparent border-0 focus:ring-0 focus:outline-none p-0 w-full min-w-[200px] placeholder-[var(--swiss-text-muted)]"
+                                    onBlur={() => onTitleSave?.()}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.currentTarget.blur(); // Trigger blur to save
+                                        }
+                                    }}
+                                    className="text-base font-medium text-[var(--swiss-text)] bg-transparent border-0 focus:ring-0 focus:outline-none p-0 w-full min-w-[200px] placeholder-[var(--swiss-text-muted)] hover:bg-[var(--swiss-off-white)] transition-colors rounded px-1 -ml-1 cursor-text"
                                     placeholder="List Name"
                                 />
                             ) : (

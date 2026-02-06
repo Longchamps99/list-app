@@ -207,7 +207,9 @@ export default async function SharePage({ params }: Props) {
                     data: {
                         userId,
                         listId: newList.id,
-                        sharedById: senderId
+                        sharedById: senderId,
+                        // @ts-ignore
+                        permission: shareToken.permission || "READ"
                     }
                 });
 

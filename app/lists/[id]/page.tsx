@@ -323,17 +323,12 @@ export default function ListPage() {
         router.push(`/dashboard?deleteList=${id}&listTitle=${encodeURIComponent(list.title)}`);
     };
 
-    const isDraggable = !search && sort === "rank";
+    const isDraggable = sort === "rank";
 
     const filteredItems = list?.items
         ? list.items
             .filter(item => {
-                if (!search.trim()) return true;
-                const searchLower = search.toLowerCase();
-                return (
-                    (item.title && item.title.toLowerCase().includes(searchLower)) ||
-                    item.content.toLowerCase().includes(searchLower)
-                );
+                return true;
             })
             .sort((a, b) => {
                 if (sort === "date") {
@@ -376,23 +371,24 @@ export default function ListPage() {
         <>
             <Header
                 variant="page"
-                title={list.title}
                 showBack={true}
                 backHref="/dashboard"
             >
                 {/* Page-specific actions in header */}
                 <div className="flex items-center gap-2 md:gap-3 ml-auto min-w-0">
                     {/* Invite Collaborators Button - Secondary style */}
-                    <button
-                        onClick={() => setShowInviteModal(true)}
-                        className="flex items-center gap-2 px-3 md:px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm flex-shrink-1 min-w-0 truncate"
-                        title="Invite"
-                    >
-                        <svg className="h-4 w-4 stroke-current flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM12.75 12a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                        </svg>
-                        <span className="hidden md:inline">Invite</span>
-                    </button>
+                    {/* Invite Collaborator Button - (was Collaborate) */}
+                    <div className="flex-shrink-1 min-w-0">
+                        <ShareButton
+                            type="LIST"
+                            id={list.id}
+                            title={list.title}
+                            className="flex items-center gap-2 px-3 md:px-5 py-2 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all font-medium text-sm w-full justify-center"
+                            mode="COLLABORATE"
+                        >
+                            <span className="hidden md:inline pl-1">Invite Collaborators</span>
+                        </ShareButton>
+                    </div>
 
                     {/* Share Button - Secondary style */}
                     <div className="flex-shrink-1 min-w-0">
@@ -434,30 +430,29 @@ export default function ListPage() {
                 )}
                 {/* Main Content */}
                 <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 min-w-0">
+
+                    {/* Large Editable Title */}
+                    <div className="mb-8">
+                        <input
+                            type="text"
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onBlur={handleTitleSave}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                }
+                            }}
+                            className="block w-full text-7xl font-bold text-[var(--swiss-black)] bg-transparent border-0 focus:ring-0 focus:outline-none p-0 placeholder-[var(--swiss-text-muted)] hover:bg-[var(--swiss-off-white)] transition-colors rounded -ml-2 px-2 py-2 cursor-text truncate h-auto leading-tight"
+                            style={{ fontSize: '4.5rem', lineHeight: '1.1' }}
+                            placeholder="List Name"
+                        />
+                    </div>
+
                     {/* Controls Bar */}
                     <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-0">
-                        {/* Search Bar */}
-                        <div className="flex-1 w-full md:max-w-2xl relative md:mr-6">
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-[var(--swiss-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </div>
-                                <input
-                                    type="text"
-                                    placeholder="Search items..."
-                                    className="w-full pl-10 pr-20 py-2.5 bg-white border border-[var(--swiss-border)] rounded-full focus:border-[var(--swiss-black)] focus:outline-none transition-all text-sm text-[var(--swiss-text)] placeholder-[var(--swiss-text-muted)]"
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                                <div className="absolute inset-y-0 right-3 flex items-center gap-2">
-                                    <kbd className="hidden md:inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold text-[var(--swiss-text-muted)] bg-[var(--swiss-off-white)] border border-[var(--swiss-border)] rounded">
-                                        ⌘K
-                                    </kbd>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Spacer where search used to be */}
+                        <div className="flex-1"></div>
 
                         {/* View and Sort Controls */}
                         <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
