@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { sendCollaborationEmail } from "@/lib/email";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -9,12 +10,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     // @ts-ignore
     const userId = user.id;
+    // @ts-ignore
+    const userName = user.name || "A Vaulted User";
 
     try {
         // Verify current user owns the list
         const list = await prisma.list.findUnique({
             where: { id },
-            select: { ownerId: true }
+            select: { ownerId: true, title: true }
         });
 
         if (!list) {
@@ -66,6 +69,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
                 permission: permission
             }
         });
+
+        // Send email notification
+        await sendCollaborationEmail(targetEmail, userName, list.title, id);
+
 
         return NextResponse.json({
             success: true,

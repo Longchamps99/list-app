@@ -732,24 +732,44 @@ export default function ListPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Permission</label>
-                                    <div className="flex gap-2">
+                                    <label className="block text-sm font-bold text-gray-900 mb-2">Permission Level</label>
+                                    <div className="flex gap-3">
                                         <button
                                             onClick={() => setInvitePermission('WRITE')}
-                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'WRITE'
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${invitePermission === 'WRITE'
+                                                ? 'bg-[#191919] text-white border-[#191919] shadow-md transform scale-[1.02]'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900'
                                                 }`}
+                                            style={{
+                                                backgroundColor: invitePermission === 'WRITE' ? '#191919' : '#ffffff',
+                                                color: invitePermission === 'WRITE' ? '#ffffff' : '#4b5563',
+                                                borderColor: invitePermission === 'WRITE' ? '#191919' : '#e5e7eb'
+                                            }}
                                         >
+                                            {invitePermission === 'WRITE' && (
+                                                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
                                             Can Edit
                                         </button>
                                         <button
                                             onClick={() => setInvitePermission('READ')}
-                                            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${invitePermission === 'READ'
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all border-2 flex items-center justify-center gap-2 ${invitePermission === 'READ'
+                                                ? 'bg-[#191919] text-white border-[#191919] shadow-md transform scale-[1.02]'
+                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:text-gray-900'
                                                 }`}
+                                            style={{
+                                                backgroundColor: invitePermission === 'READ' ? '#191919' : '#ffffff',
+                                                color: invitePermission === 'READ' ? '#ffffff' : '#4b5563',
+                                                borderColor: invitePermission === 'READ' ? '#191919' : '#e5e7eb'
+                                            }}
                                         >
+                                            {invitePermission === 'READ' && (
+                                                <svg className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
                                             View Only
                                         </button>
                                     </div>
@@ -757,9 +777,17 @@ export default function ListPage() {
                                 <button
                                     onClick={inviteCollaborator}
                                     disabled={inviting || !inviteEmail.trim()}
-                                    className="w-full py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                    className="w-full py-3 bg-[#191919] text-white rounded-lg font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    style={{ backgroundColor: '#191919', color: 'white' }}
                                 >
-                                    {inviting ? 'Inviting...' : 'Send Invite'}
+                                    {inviting ? (
+                                        <>
+                                            <div className="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent"></div>
+                                            Inviting...
+                                        </>
+                                    ) : (
+                                        'Send Invite'
+                                    )}
                                 </button>
                             </div>
 

@@ -535,7 +535,7 @@ function NewItemContent() {
 
                             {/* Only show the disconnected 'Add another' link if NOT in smart list mode (since we have a button above) */}
                             {source !== "smart-list" && (
-                                <div className="mt-8 text-center">
+                                <div className="mt-8 flex items-center justify-center gap-6">
                                     <button
                                         onClick={() => {
                                             setHasSearched(false);
@@ -547,10 +547,20 @@ function NewItemContent() {
                                             setItemLink("");
                                             setLocation("");
                                         }}
+                                        className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2 flex items-center gap-2"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Add Another Item
+                                    </button>
+
+                                    <div className="h-4 w-px bg-[var(--swiss-border)]"></div>
+
+                                    <Link
+                                        href="/dashboard"
                                         className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2"
                                     >
-                                        + Add another item
-                                    </button>
+                                        Return to Dashboard
+                                    </Link>
                                 </div>
                             )}
                         </motion.div>

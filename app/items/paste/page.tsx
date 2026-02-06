@@ -155,36 +155,36 @@ export default function SmartPastePage() {
                                 >
                                     <textarea
                                         autoFocus
-                                        className="w-full h-80 bg-transparent border-none p-8 text-lg placeholder-[var(--swiss-text-muted)] focus:ring-0 transition-all font-mono resize-none appearance-none outline-none text-[var(--swiss-black)]"
+                                        className="w-full h-80 bg-transparent border-none p-8 text-lg placeholder-[var(--swiss-text-muted)] focus:ring-0 transition-all font-mono resize-none appearance-none outline-none text-[var(--swiss-black)] pb-20"
                                         placeholder={`1. The Matrix\n2. Inception\n3. Interstellar\n...`}
                                         value={rawText}
                                         onChange={(e) => setRawText(e.target.value)}
                                     />
-                                    <div className="absolute bottom-6 right-6 text-xs font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">
+                                    <div className="absolute bottom-6 left-8 text-xs font-bold text-[var(--swiss-text-muted)] uppercase tracking-widest">
                                         {rawText.split(/\n/).filter(l => l.trim()).length} Items Detected
                                     </div>
+                                    <button
+                                        onClick={handleProcess}
+                                        disabled={!rawText.trim() || isProcessing}
+                                        className={`${primaryButtonClass} absolute bottom-4 right-4 py-3 px-6 shadow-lg disabled:shadow-none hover:-translate-y-1`}
+                                        style={{ backgroundColor: '#191919', color: 'white' }}
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                                Processing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Process List <ArrowRight className="ml-2 h-4 w-4" />
+                                            </>
+                                        )}
+                                    </button>
                                 </motion.div>
                                 <p className="text-center mt-6 text-[var(--swiss-text-muted)] font-medium text-xs tracking-widest uppercase">
                                     AI-powered list detection active
                                 </p>
                             </div>
-
-                            <button
-                                onClick={handleProcess}
-                                disabled={!rawText.trim() || isProcessing}
-                                className={`${primaryButtonClass} w-full py-5 text-lg flex items-center justify-center gap-3 rounded-lg`}
-                            >
-                                {isProcessing ? (
-                                    <>
-                                        <Loader2 className="h-6 w-6 animate-spin" />
-                                        Processing with Gemini AI...
-                                    </>
-                                ) : (
-                                    <>
-                                        Process List <ArrowRight className="h-6 w-6" />
-                                    </>
-                                )}
-                            </button>
                         </motion.div>
                     ) : (
                         <motion.div
@@ -292,7 +292,8 @@ export default function SmartPastePage() {
                             <button
                                 onClick={handleSaveAll}
                                 disabled={parsedItems.length === 0 || isSaving}
-                                className="bg-[var(--swiss-black)] text-white hover:bg-[var(--swiss-accent-hover)] transition-all sticky bottom-6 w-full py-5 text-lg flex items-center justify-center gap-3 rounded-lg font-bold"
+                                className="bg-[#191919] text-white hover:bg-[var(--swiss-accent-hover)] transition-all sticky bottom-6 w-full py-5 text-lg flex items-center justify-center gap-3 rounded-lg font-bold"
+                                style={{ backgroundColor: '#191919', color: 'white' }}
                             >
                                 {isSaving ? (
                                     <>
@@ -310,6 +311,6 @@ export default function SmartPastePage() {
                     )}
                 </AnimatePresence>
             </main>
-        </div>
+        </div >
     );
 }

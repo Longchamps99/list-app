@@ -743,6 +743,30 @@ function SmartListContent() {
                             </SortableContext>
                         </DndContext>
                     )}
+
+                    {/* Sticky Footer Save Button for better visibility */}
+                    {(matchingTags.length > 0 || requestedTagNames.length > 0) && (
+                        <div className="sticky bottom-6 mt-8 z-20">
+                            <button
+                                onClick={saveList}
+                                disabled={saving}
+                                className="w-full py-4 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold text-lg flex items-center justify-center gap-3 disabled:opacity-50 hover:-translate-y-1 active:translate-y-0"
+                                style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                            >
+                                {saving ? (
+                                    <>
+                                        <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                                        Saving List...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Check className="h-6 w-6" />
+                                        Save This Smart List
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </main>
             </div>
         </>

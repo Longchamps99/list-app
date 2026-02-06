@@ -1,7 +1,7 @@
 // Reusable styled components for consistent Swiss Design UI elements
 
 // 1. Add New Item Button (Primary Pill)
-export const addNewItemButtonClass = "flex items-center gap-2 px-6 py-2.5 bg-[var(--swiss-black)] text-white rounded-full hover:bg-[var(--swiss-accent-hover)] hover:text-white hover:-translate-y-0.5 active:translate-y-0 active:bg-[var(--swiss-black)] active:text-white transition-all font-bold text-sm cursor-pointer";
+export const addNewItemButtonClass = "flex items-center gap-2 px-6 py-2.5 bg-[#191919] text-white rounded-full hover:bg-[var(--swiss-accent-hover)] hover:text-white hover:-translate-y-0.5 active:translate-y-0 active:bg-[#191919] active:text-white transition-all font-bold text-sm cursor-pointer";
 
 // 2. Tag Pills (for item tags)
 export const tagPillClass = "inline-flex items-center px-3 py-1 bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 rounded-full text-xs font-medium hover:bg-[var(--swiss-green)]/20 hover:border-[var(--swiss-green)]/50 active:bg-[var(--swiss-green)]/30 transition-all cursor-pointer";
@@ -10,16 +10,16 @@ export const tagPillClass = "inline-flex items-center px-3 py-1 bg-[var(--swiss-
 export const shareButtonClass = "p-2 text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] hover:bg-[var(--swiss-off-white)] active:bg-[var(--swiss-border)] rounded-lg transition-colors border border-transparent hover:border-[var(--swiss-border)] cursor-pointer";
 
 // 4. Ranking Number Circle
-export const rankingCircleClass = "flex-shrink-0 w-8 h-8 rounded-full bg-[var(--swiss-black)] text-white flex items-center justify-center font-bold text-sm leading-none";
+export const rankingCircleClass = "flex-shrink-0 w-8 h-8 rounded-full bg-[#191919] text-white flex items-center justify-center font-bold text-sm leading-none";
 
 // 5. Filter Tag Pills (for filter bar)
 export const filterTagPillClass = "bg-[var(--swiss-green-light)] text-[var(--swiss-green)] border border-[var(--swiss-green)]/30 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[var(--swiss-green)]/20 active:bg-[var(--swiss-green)]/30 transition-all cursor-pointer";
 
 // 6. Primary Action Button (Pill style)
-export const primaryButtonClass = "px-6 py-2.5 bg-[var(--swiss-black)] text-white rounded-full hover:bg-[var(--swiss-accent-hover)] hover:text-white hover:-translate-y-0.5 active:translate-y-0 active:bg-[var(--swiss-black)] active:text-white transition-all font-semibold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0";
+export const primaryButtonClass = "px-6 py-2.5 bg-[#191919] text-white rounded-full hover:bg-[var(--swiss-accent-hover)] hover:text-white hover:-translate-y-0.5 active:translate-y-0 active:bg-[#191919] active:text-white transition-all font-semibold text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0";
 
 // 7. Secondary Button (Pill style)
-export const secondaryButtonClass = "px-6 py-2.5 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] active:border-[var(--swiss-black)] transition-all font-semibold text-sm cursor-pointer";
+export const secondaryButtonClass = "px-6 py-2.5 bg-white text-[var(--swiss-text-secondary)] border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[#191919] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] active:border-[var(--swiss-black)] transition-all font-semibold text-sm cursor-pointer";
 
 // 8. Danger Button (delete, etc)
 export const dangerButtonClass = "px-4 py-2 bg-[var(--swiss-red-light)] text-[var(--swiss-red)] border border-[var(--swiss-red)]/30 rounded-lg hover:bg-[var(--swiss-red)]/10 hover:border-[var(--swiss-red)]/50 active:bg-[var(--swiss-red)]/20 active:border-[var(--swiss-red)] transition-all font-semibold text-sm cursor-pointer";
