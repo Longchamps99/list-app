@@ -8,9 +8,10 @@ interface ShareButtonProps {
     title: string;
     className?: string;
     tags?: string; // For smart lists
+    children?: React.ReactNode;
 }
 
-export function ShareButton({ type, id, title, className = "", tags }: ShareButtonProps) {
+export function ShareButton({ type, id, title, className = "", tags, children }: ShareButtonProps) {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleShareClick = (e: React.MouseEvent) => {
@@ -25,8 +26,8 @@ export function ShareButton({ type, id, title, className = "", tags }: ShareButt
                 onClick={handleShareClick}
                 className={className || "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--swiss-text-secondary)] bg-white border border-[var(--swiss-border)] rounded-full hover:bg-[var(--swiss-off-white)] hover:text-[var(--swiss-black)] hover:border-[var(--swiss-text-muted)] active:bg-[var(--swiss-cream)] transition-all"}
             >
-                <Share2 className="w-4 h-4" />
-                Share
+                <Share2 className="w-4 h-4 flex-shrink-0" />
+                {children || "Share"}
             </button>
 
             <ShareModal

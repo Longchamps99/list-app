@@ -109,7 +109,7 @@ export function Header({
 
                 {/* Center Section - Page-specific content */}
                 {children && (
-                    <div className="flex-1 mx-4 flex items-center justify-center max-w-2xl">
+                    <div className="flex-1 mx-2 sm:mx-4 flex items-center justify-end sm:justify-center min-w-0 overflow-hidden">
                         {children}
                     </div>
                 )}
