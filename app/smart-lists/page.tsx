@@ -169,56 +169,81 @@ function SmartListContent() {
         const { active, over } = event;
         if (!over || active.id === over.id || !contextId) return;
 
-        const oldIndex = items.findIndex((i) => i.id === active.id);
-        const newIndex = items.findIndex((i) => i.id === over.id);
+        // Ensure we are in a rankable view
+        if (sort !== \"rank\" || search.trim()) return;
 
-        const newItems = arrayMove(items, oldIndex, newIndex);
+        setItems(prevItems => {
+            const currentFiltered = prevItems
+                .filter(item => {
+                    if (!search.trim()) return true;
+                    // Note: search is empty here due to guard, but keeping for logic safety
+                    const searchLower = search.toLowerCase();
+                    return (
+                        (item.title && item.title.toLowerCase().includes(searchLower)) ||
+                        item.content.toLowerCase().includes(searchLower)
+                    );
+                })
+                .sort((a, b) => {
+                    const rankA = a.ranks?.[0]?.rank || \"0|zzzzzz:\";
+                    const rankB = b.ranks?.[0]?.rank || \"0|zzzzzz:\";
+                    return rankA.localeCompare(rankB);
+                });
 
-        // Calculate Rank
-        const prevItem = newItems[newIndex - 1];
-        const nextItem = newItems[newIndex + 1];
+            const oldVisualIndex = currentFiltered.findIndex((i) => i.id === active.id);
+            const newVisualIndex = currentFiltered.findIndex((i) => i.id === over.id);
 
-        const prevRankStr = prevItem?.ranks?.[0]?.rank || LexoRank.min().toString();
-        const nextRankStr = nextItem?.ranks?.[0]?.rank || LexoRank.max().toString();
+            if (oldVisualIndex === -1 || newVisualIndex === -1) return prevItems;
 
-        let newRankStr;
-        try {
-            if (prevRankStr === nextRankStr) {
-                const prev = LexoRank.parse(prevRankStr);
-                newRankStr = prev.genNext().toString();
-            } else {
-                const prev = LexoRank.parse(prevRankStr);
-                const next = LexoRank.parse(nextRankStr);
-                newRankStr = prev.between(next).toString();
-            }
-        } catch (e) {
-            console.error("Rank error", e);
+            const movedFiltered = arrayMove(currentFiltered, oldVisualIndex, newVisualIndex);
+
+            // Calculate Rank based on new neighbors in the visual list
+            const prevItem = movedFiltered[newVisualIndex - 1];
+            const nextItem = movedFiltered[newVisualIndex + 1];
+
+            const prevRankStr = prevItem?.ranks?.[0]?.rank || LexoRank.min().toString();
+            const nextRankStr = nextItem?.ranks?.[0]?.rank || LexoRank.max().toString();
+
+            let newRankStr;
             try {
-                const prev = LexoRank.parse(prevRankStr);
-                newRankStr = prev.genNext().toString();
-            } catch (fallbackErr) {
-                newRankStr = LexoRank.middle().toString();
+                if (prevRankStr === nextRankStr) {
+                    const prev = LexoRank.parse(prevRankStr);
+                    newRankStr = prev.genNext().toString();
+                } else {
+                    const prev = LexoRank.parse(prevRankStr);
+                    const next = LexoRank.parse(nextRankStr);
+                    newRankStr = prev.between(next).toString();
+                }
+            } catch (e) {
+                console.error(\"Rank error\", e);
+                try {
+                    const prev = LexoRank.parse(prevRankStr);
+                    newRankStr = prev.genNext().toString();
+                } catch (fallbackErr) {
+                    newRankStr = LexoRank.middle().toString();
+                }
             }
-        }
 
-        // Optimistic Update - update the item's rank locally
-        const updatedItem = { ...newItems[newIndex] };
-        if (updatedItem.ranks && updatedItem.ranks.length > 0) {
-            updatedItem.ranks = [{ rank: newRankStr }];
-        } else {
-            updatedItem.ranks = [{ rank: newRankStr }];
-        }
-        newItems[newIndex] = updatedItem;
-        setItems(newItems);
-
-        // API Update
-        await fetch("/api/ranks", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            // API Update - non-blocking
+            fetch(\"/api/ranks\", {
+                method: \"POST\",
+                headers: {
+            \"Content-Type\": \"application/json\" },
+                body: JSON.stringify({
                 contextId: contextId,
                 updates: [{ itemId: active.id, rank: newRankStr }]
             })
+            });
+
+            // Return new global items with the updated rank
+            return prevItems.map(item => {
+                if (item.id === active.id) {
+                    return {
+                        ...item,
+                        ranks: [{ rank: newRankStr }]
+                    };
+                }
+                return item;
+            });
         });
     };
 
