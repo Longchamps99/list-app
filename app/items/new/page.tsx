@@ -560,12 +560,15 @@ function NewItemContent() {
 
                                     <div className="h-4 w-px bg-[var(--swiss-border)]"></div>
 
-                                    <Link
-                                        href="/dashboard"
+                                    <button
+                                        onClick={() => {
+                                            router.refresh();
+                                            router.push("/dashboard");
+                                        }}
                                         className="text-[var(--swiss-text-muted)] hover:text-[var(--swiss-black)] text-sm font-bold transition-all uppercase tracking-widest p-2"
                                     >
                                         Return to Dashboard
-                                    </Link>
+                                    </button>
                                 </div>
                             )}
                         </motion.div>

@@ -138,7 +138,7 @@ function SmartListContent() {
         setRequestedTagNames(tagNamesFromUrl);
 
         try {
-            const res = await fetch(`/api/lists/smart/preview?tags=${encodeURIComponent(tagsParam || "")}`);
+            const res = await fetch(`/api/lists/smart/preview?tags=${encodeURIComponent(tagsParam || "")}`, { cache: "no-store" });
             if (res.ok) {
                 const data = await res.json();
                 setItems(data.items);
