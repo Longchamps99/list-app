@@ -73,9 +73,15 @@ export async function POST(req: NextRequest) {
 
         // Send verification email
         try {
-            await sendVerificationEmail(email, token);
-        } catch (emailError) {
-            console.error("Failed to send verification email during registration:", emailError);
+            const emailResult = await sendVerificationEmail(email, token);
+            console.log("Verification email sent result:", emailResult);
+        } catch (emailError: any) {
+            console.error("Failed to send verification email during registration. Error details:", {
+                message: emailError.message,
+                name: emailError.name,
+                cause: emailError.cause,
+                stack: emailError.stack,
+            });
             // We don't fail registration if email fails, but we should inform user
             // or allow them to resend.
         }

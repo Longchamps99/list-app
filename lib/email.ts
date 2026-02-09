@@ -5,9 +5,11 @@ let resendClient: Resend | null = null;
 const getResendClient = () => {
     if (!resendClient) {
         if (!process.env.RESEND_API_KEY) {
+            console.error("CRITICAL: RESEND_API_KEY is not configured in environment variables.");
             throw new Error("RESEND_API_KEY is not configured");
         }
         resendClient = new Resend(process.env.RESEND_API_KEY);
+        console.log("Resend client initialized successfully.");
     }
     return resendClient;
 };
