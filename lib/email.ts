@@ -23,7 +23,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
 
     const resend = getResendClient();
     const { data, error } = await resend.emails.send({
-        from: "Vaulted <onboarding@vaultedfaves.com>",
+        from: "Vaulted <onboarding@mail.vaultedfaves.com>",
         to: email,
         subject: "Verify your email for Vaulted",
         html: `
@@ -64,7 +64,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
 
     const resend = getResendClient();
     const { data, error } = await resend.emails.send({
-        from: "Vaulted <onboarding@vaultedfaves.com>",
+        from: "Vaulted <onboarding@mail.vaultedfaves.com>",
         to: email,
         subject: "Reset your password for Vaulted",
         html: `
@@ -105,7 +105,7 @@ export const sendCollaborationEmail = async (email: string, inviterName: string,
 
     const resend = getResendClient();
     const { data, error } = await resend.emails.send({
-        from: "Vaulted <onboarding@vaultedfaves.com>",
+        from: "Vaulted <onboarding@mail.vaultedfaves.com>",
         to: email,
         subject: `${inviterName} invited you to collaborate on "${listTitle}"`,
         html: `
